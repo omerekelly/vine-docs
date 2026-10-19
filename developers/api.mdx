@@ -4,7 +4,7 @@ description: "Authenticate with the Vine API and create a checkout session."
 icon: "code"
 ---
 
-The Vine API lets your own product collect payments and manage Vine resources.
+The Vine developer API lets your own product collect payments, create checkout sessions, send invoices and pay bills.
 
 ## Base URL
 
@@ -38,6 +38,10 @@ curl https://api.vine.ng/v1/checkout/sessions \
 ```
 
 Use `sk_test_...` keys for test mode and `sk_live_...` keys for real payments.
+
+<Note>
+  Login, registration, account management, wallet operations, KYC, store settings and provider webhooks are dashboard endpoints. They are not part of the developer API and cannot be called with an API key.
+</Note>
 
 ## Create a checkout session
 
