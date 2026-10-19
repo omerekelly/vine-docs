@@ -1,0 +1,84 @@
+---
+title: "Bills API"
+sidebarTitle: "Bills"
+description: "List bill products, verify a customer and pay a bill."
+icon: "receipt"
+---
+
+Use the Bills API to pay airtime, data, utilities and other supported bill products.
+
+## Endpoints
+
+| Method | Path | Description |
+| --- | --- | --- |
+| `GET` | `/v1/bills/categories` | List bill categories |
+| `GET` | `/v1/bills/products` | List products in a category |
+| `GET` | `/v1/bills/betting/providers` | List betting providers |
+| `POST` | `/v1/bills/verify` | Verify a customer reference |
+| `POST` | `/v1/bills/pay` | Pay a bill |
+| `POST` | `/v1/bills/sync` | Sync the bill catalog |
+
+## 1. Find a product
+
+```bash
+curl "https://api.vine.ng/v1/bills/products?category=AIRTIME" \
+  -H "Authorization: Bearer sk_test_your_key"
+```
+
+Each product includes a `productCode` and the fields required for payment.
+
+## 2. Verify the customer
+
+`POST /v1/bills/verify`
+
+```bash
+curl https://api.vine.ng/v1/bills/verify \
+  -H "Authorization: Bearer sk_test_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "category": "AIRTIME",
+    "productCode": "MTN",
+    "customerRef": "08012345678"
+  }'
+```
+
+The response confirms the customer or meter details before you charge.
+
+## 3. Pay the bill
+
+`POST /v1/bills/pay`
+
+| Field | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `category` | string | Yes | Category from the catalog. |
+| `productCode` | string | Yes | Product from the catalog. |
+| `customerRef` | string | Yes | Phone number, meter number or provider reference. |
+| `amountKobo` | integer | Yes | Amount in kobo. |
+| `pin` | string | Yes | Your 4–6 digit transaction PIN. |
+| `bundleCode` | string | No | For products that use bundles. |
+| `vendType` | string | No | Provider-specific vend type. |
+
+```bash
+curl https://api.vine.ng/v1/bills/pay \
+  -H "Authorization: Bearer sk_test_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "category": "AIRTIME",
+    "productCode": "MTN",
+    "customerRef": "08012345678",
+    "amountKobo": 100000,
+    "pin": "1234"
+  }'
+```
+
+<Warning>
+  The transaction PIN is a secret. Send it only from your server and never log it.
+</Warning>
+
+## Test mode
+
+Bills in test mode use the sandbox provider. A test payment does not deliver real airtime or settle to a biller.
+
+## Scopes
+
+Bills require an API key with the `BILLS` scope.

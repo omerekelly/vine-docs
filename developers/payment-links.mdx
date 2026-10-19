@@ -1,0 +1,114 @@
+---
+title: "Payment links API"
+sidebarTitle: "Payment links"
+description: "Create, list, deactivate and email payment links."
+icon: "link"
+---
+
+Payment links are the fastest way to collect a fixed or custom amount.
+
+## Endpoints
+
+| Method | Path | Description |
+| --- | --- | --- |
+| `POST` | `/v1/payment-links` | Create a payment link |
+| `GET` | `/v1/payment-links` | List payment links |
+| `GET` | `/v1/payment-links/{id}` | Get one link and its payments |
+| `DELETE` | `/v1/payment-links/{id}` | Deactivate a link |
+| `POST` | `/v1/payment-links/{id}/send` | Email the link to a customer |
+
+## Create a payment link
+
+`POST /v1/payment-links`
+
+| Field | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `title` | string | Yes | Shown on the payment page. Max 200 characters. |
+| `amountKobo` | integer | Conditional | Fixed amount in kobo. Required unless `allowCustomAmount` is true. |
+| `allowCustomAmount` | boolean | No | Let the customer choose the amount. |
+| `paymentMethods` | string[] | No | `bank_transfer`, `card`, `crypto`. Defaults to the methods enabled on your account. |
+| `expiresAt` | ISO 8601 string | No | When the link should stop accepting payments. |
+
+```bash
+curl https://api.vine.ng/v1/payment-links \
+  -H "Authorization: Bearer sk_test_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Design retainer",
+    "amountKobo": 2500000,
+    "paymentMethods": ["bank_transfer", "card"]
+  }'
+```
+
+```json
+{
+  "link": {
+    "id": "pl_123",
+    "slug": "design-retainer",
+    "title": "Design retainer",
+    "amountKobo": "2500000",
+    "allowCustomAmount": false,
+    "paymentMethods": ["bank_transfer", "card"],
+    "payUrl": "https://vine.ng/pay/design-retainer",
+    "active": true,
+    "expiresAt": null
+  },
+  "mode": "TEST"
+}
+```
+
+Share `payUrl` with the customer. Do not construct the URL yourself.
+
+## List payment links
+
+```bash
+curl "https://api.vine.ng/v1/payment-links?limit=20" \
+  -H "Authorization: Bearer sk_test_your_key"
+```
+
+```json
+{
+  "links": [
+    {
+      "id": "pl_123",
+      "slug": "design-retainer",
+      "title": "Design retainer",
+      "amountKobo": "2500000",
+      "active": true
+    }
+  ],
+  "mode": "TEST"
+}
+```
+
+## Get a link
+
+`GET /v1/payment-links/{id}` returns the link plus its payment history.
+
+## Deactivate a link
+
+`DELETE /v1/payment-links/{id}`
+
+```json
+{ "deactivated": true }
+```
+
+## Email a link
+
+`POST /v1/payment-links/{id}/send`
+
+| Field | Type | Required |
+| --- | --- | --- |
+| `clientEmail` | string | Yes |
+| `clientName` | string | No |
+
+```bash
+curl https://api.vine.ng/v1/payment-links/pl_123/send \
+  -H "Authorization: Bearer sk_test_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{"clientEmail":"customer@example.com","clientName":"Ada"}'
+```
+
+## Errors
+
+See [Errors](/developers/errors) for status codes and error codes.

@@ -1,0 +1,86 @@
+---
+title: "Checkout API"
+sidebarTitle: "Checkout"
+description: "Create and retrieve hosted checkout sessions."
+icon: "credit-card"
+---
+
+Create a hosted checkout session when you want Vine to handle the payment page.
+
+## Endpoints
+
+| Method | Path | Description |
+| --- | --- | --- |
+| `POST` | `/v1/checkout/sessions` | Create a checkout session |
+| `GET` | `/v1/checkout/sessions/{id}` | Retrieve a session and its payments |
+
+## Create a session
+
+`POST /v1/checkout/sessions`
+
+| Field | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `amountKobo` | integer | Yes | Amount in kobo. |
+| `currency` | string | No | Only `NGN`. |
+| `customerEmail` | string | No | Used for the receipt. |
+| `paymentMethods` | string[] | No | `bank_transfer`, `card`, `crypto`. |
+| `successUrl` | URL | No | Where to send the customer after payment. |
+| `cancelUrl` | URL | No | Where to send the customer if they cancel. |
+| `webhookUrl` | URL | No | Per-session webhook override. |
+| `metadata` | object | No | Your own data, returned with the session. |
+
+```bash
+curl https://api.vine.ng/v1/checkout/sessions \
+  -H "Authorization: Bearer sk_test_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amountKobo": 500000,
+    "customerEmail": "customer@example.com",
+    "paymentMethods": ["bank_transfer", "card"],
+    "successUrl": "https://example.com/thanks",
+    "metadata": { "orderId": "ord_123" }
+  }'
+```
+
+```json
+{
+  "session": {
+    "id": "cs_123",
+    "amountKobo": "500000",
+    "currency": "NGN",
+    "status": "PENDING",
+    "mode": "TEST",
+    "type": "MERCHANT",
+    "checkoutUrl": "https://vine.ng/checkout/cs_123",
+    "expiresAt": "2026-10-19T23:30:00.000Z"
+  },
+  "mode": "TEST"
+}
+```
+
+Redirect the customer to `checkoutUrl`.
+
+## Retrieve a session
+
+```bash
+curl https://api.vine.ng/v1/checkout/sessions/cs_123 \
+  -H "Authorization: Bearer sk_test_your_key"
+```
+
+The response includes the session, its status and its payment attempts.
+
+## Payment methods
+
+- **Bank transfer** — Vine displays a dedicated account and watches for the transfer.
+- **Card** — the customer enters card details on Vine. Card data never touches your server.
+- **Crypto** — Vine quotes the amount and shows the supported network and address.
+
+Only enable the methods your business supports.
+
+## Expiry
+
+Checkout sessions expire after one hour. Create a new session if the customer needs more time.
+
+## Webhooks
+
+A session-level `webhookUrl` overrides your dashboard webhook URL for that session. See [Webhooks](/developers/webhooks).

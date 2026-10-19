@@ -1,0 +1,53 @@
+---
+title: "Errors"
+sidebarTitle: "Errors"
+description: "Handle Vine API errors and retries."
+icon: "triangle-exclamation"
+---
+
+Failed requests return a JSON body with a human-readable message and a stable code.
+
+```json
+{
+  "error": "Invalid API key",
+  "code": "INVALID_API_KEY"
+}
+```
+
+## HTTP status codes
+
+| Status | Meaning | What to do |
+| --- | --- | --- |
+| `400` | Invalid request | Fix the request body or parameters. |
+| `401` | Missing or invalid key | Check the `Authorization` header. |
+| `403` | Forbidden | Check the key scope, mode or account status. |
+| `404` | Not found | Check the resource ID and mode. |
+| `409` | Conflict | The resource is already in that state. |
+| `429` | Rate limited | Back off and retry after the window. |
+| `500` | Server error | Retry with exponential backoff. |
+
+## Common codes
+
+| Code | Meaning |
+| --- | --- |
+| `INVALID_API_KEY` | The key is wrong, revoked or for the wrong mode. |
+| `INSUFFICIENT_SCOPE` | The key is missing the scope this endpoint needs. |
+| `DASHBOARD_ONLY` | The endpoint is a dashboard/session endpoint, not part of the developer API. |
+| `KYC_REQUIRED` | The account must complete verification first. |
+| `RATE_LIMIT` | Too many requests. Wait and retry. |
+| `NOT_FOUND` | The resource does not exist in the current mode. |
+| `VALIDATION_ERROR` | One or more fields are invalid. |
+
+## Retries
+
+- Do not retry `400`, `401`, `403` or `404` without changing the request.
+- Retry `429` and `5xx` with exponential backoff and jitter.
+- Make retries idempotent where possible. For webhooks, use the event ID.
+
+## Test vs live
+
+A test key only sees test resources. A live key only sees live resources. If a resource exists in the dashboard but returns `404`, check that you are using a key for the same mode.
+
+## Need help?
+
+Email [support@vine.ng](mailto:support@vine.ng) with the request ID from the response headers and the time of the request.

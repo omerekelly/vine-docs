@@ -1,0 +1,112 @@
+---
+title: "Invoices API"
+sidebarTitle: "Invoices"
+description: "Create, send and track invoices from your product."
+icon: "file-invoice"
+---
+
+Create an invoice when you need line items, tax, a due date and payment terms.
+
+## Endpoints
+
+| Method | Path | Description |
+| --- | --- | --- |
+| `GET` | `/v1/invoices` | List invoices |
+| `POST` | `/v1/invoices` | Create an invoice |
+| `GET` | `/v1/invoices/{id}` | Get an invoice |
+| `GET` | `/v1/invoices/{id}/download` | Download the PDF |
+| `POST` | `/v1/invoices/{id}/send` | Email the invoice |
+| `POST` | `/v1/invoices/{id}/mark-paid` | Mark it paid manually |
+| `POST` | `/v1/invoices/{id}/cancel` | Cancel it |
+
+## Create an invoice
+
+`POST /v1/invoices`
+
+| Field | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `clientName` | string | Yes | Customer or company name. |
+| `clientEmail` | string | Yes | Where the invoice is sent. |
+| `clientPhone` | string | No | |
+| `clientAddress` | string | No | |
+| `dueDate` | ISO 8601 string | No | Payment due date. |
+| `notes` | string | No | Appears on the invoice. |
+| `taxKobo` | integer | No | Tax amount in kobo. |
+| `lineItems` | array | Yes | At least one item. |
+
+Each line item has:
+
+| Field | Type | Required |
+| --- | --- | --- |
+| `description` | string | Yes |
+| `quantity` | integer | Yes |
+| `unitPriceKobo` | integer | Yes |
+
+```bash
+curl https://api.vine.ng/v1/invoices \
+  -H "Authorization: Bearer sk_test_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "clientName": "Acme Ltd",
+    "clientEmail": "billing@acme.com",
+    "dueDate": "2026-11-02T00:00:00.000Z",
+    "lineItems": [
+      { "description": "Design work", "quantity": 1, "unitPriceKobo": 25000000 }
+    ]
+  }'
+```
+
+```json
+{
+  "invoice": {
+    "id": "inv_123",
+    "invoiceNumber": "INV-0042",
+    "status": "DRAFT",
+    "clientName": "Acme Ltd",
+    "clientEmail": "billing@acme.com",
+    "totalKobo": "25000000",
+    "payUrl": "https://vine.ng/invoice/inv_123"
+  },
+  "mode": "TEST"
+}
+```
+
+## Send an invoice
+
+`POST /v1/invoices/{id}/send`
+
+```bash
+curl https://api.vine.ng/v1/invoices/inv_123/send \
+  -H "Authorization: Bearer sk_test_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{}'
+```
+
+## Mark paid
+
+Use this when the customer paid outside Vine.
+
+```bash
+curl https://api.vine.ng/v1/invoices/inv_123/mark-paid \
+  -H "Authorization: Bearer sk_test_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{"note":"Paid by bank transfer"}'
+```
+
+## Cancel
+
+`POST /v1/invoices/{id}/cancel` stops the invoice from accepting payment.
+
+## Download the PDF
+
+`GET /v1/invoices/{id}/download` returns `application/pdf`. Read the response as binary data, not JSON.
+
+## Statuses
+
+| Status | Meaning |
+| --- | --- |
+| `DRAFT` | Created but not sent. |
+| `SENT` | Sent and awaiting payment. |
+| `PAID` | Paid or marked paid. |
+| `OVERDUE` | Past the due date. |
+| `CANCELLED` | No longer collectable. |

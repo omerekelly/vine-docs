@@ -46,7 +46,13 @@
         "icon": "code",
         "pages": [
           "developers/api",
-          "developers/webhooks"
+          "developers/quickstart",
+          "developers/payment-links",
+          "developers/checkout",
+          "developers/invoices",
+          "developers/bills",
+          "developers/webhooks",
+          "developers/errors"
         ]
       },
       {

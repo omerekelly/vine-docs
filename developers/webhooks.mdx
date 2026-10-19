@@ -2,44 +2,125 @@
 title: "Webhooks"
 description: "Receive signed payment events on your server."
 icon: "bolt"
+sidebarTitle: "Webhooks"
 ---
 
-Webhooks let your server react when a payment succeeds, fails or changes state.
+Webhooks let your server react when a payment, invoice or store order changes state.
 
-## Configure a webhook
+## Configure an endpoint
 
-<Steps>
-  <Step title="Open Webhooks">
-    In the dashboard, go to **Webhooks**.
-  </Step>
-  <Step title="Add your endpoint">
-    Enter the HTTPS URL that should receive events.
-  </Step>
-  <Step title="Copy the signing secret">
-    Vine creates a secret beginning with `whsec_`. Store it securely on your server.
-  </Step>
-</Steps>
+1. Open **Dashboard → Webhooks**.
+2. Add an HTTPS URL.
+3. Copy the signing secret. It begins with `whsec_`.
+
+The webhook URL and secret are dashboard settings. They are not available through the developer API.
+
+## Delivery headers
+
+Each request includes:
+
+| Header | Meaning |
+| --- | --- |
+| `X-Vine-Event` | Event type, for example `payment.success`. |
+| `X-Vine-Delivery-Id` | Unique delivery ID. |
+| `X-Vine-Signature` | `t=<timestamp>,v1=<hmac>`. |
+
+## Payload
+
+```json
+{
+  "id": "evt_123",
+  "type": "payment.success",
+  "livemode": false,
+  "createdAt": "2026-10-19T22:30:00.000Z",
+  "data": {
+    "referenceType": "payment_link",
+    "referenceId": "pay_123",
+    "amountKobo": "500000",
+    "feeKobo": "7500",
+    "netKobo": "492500"
+  }
+}
+```
+
+## Events
+
+| Event | Fires when |
+| --- | --- |
+| `payment.success` | A payment link is paid. |
+| `checkout.success` | A checkout session is paid. |
+| `deposit.funded` | A deposit checkout is funded. |
+| `invoice.paid` | An invoice is paid. |
+| `product.purchased` | A digital product is purchased. |
+| `course.enrolled` | A student enrolls in a course. |
+| `course.installment_paid` | A course installment is paid. |
+| `store.cart.paid` | A storefront cart is paid. |
+| `store.cart.refunded` | A storefront order is refunded. |
+| `store.cart.<status>` | An order fulfillment status changes. |
+
+Always read the event type from `type` and the event ID from `id`. New event types may be added.
 
 ## Verify the signature
 
-Each request includes an `X-Vine-Signature` header:
+The signed string is `<timestamp>.<raw body>`. Compute an HMAC SHA-256 with your `whsec_` secret and compare it with `v1` in constant time. Reject requests older than five minutes.
 
-```text
-t=1710000000,v1=hex-encoded-hmac
+### Node.js
+
+```js
+import crypto from "node:crypto";
+
+function verify(rawBody, signatureHeader, secret) {
+  const parts = Object.fromEntries(
+    signatureHeader.split(",").map((part) => part.split("=")),
+  );
+  const timestamp = Number(parts.t);
+  const signature = parts.v1;
+  if (!timestamp || !signature) return false;
+  if (Math.abs(Date.now() / 1000 - timestamp) > 300) return false;
+
+  const expected = crypto
+    .createHmac("sha256", secret)
+    .update(`${timestamp}.${rawBody}`)
+    .digest("hex");
+
+  return crypto.timingSafeEqual(
+    Buffer.from(expected, "hex"),
+    Buffer.from(signature, "hex"),
+  );
+}
 ```
 
-To verify a request:
+### Python
 
-1. Read the raw request body.
-2. Build the signed string `<timestamp>.<raw body>`.
-3. Compute an HMAC SHA-256 using your `whsec_` secret.
-4. Compare it with `v1` using a constant-time comparison.
-5. Reject requests whose timestamp is more than 5 minutes old.
+```python
+import hashlib
+import hmac
+import time
+
+def verify(raw_body: bytes, signature_header: str, secret: str) -> bool:
+    parts = dict(part.split("=", 1) for part in signature_header.split(","))
+    timestamp = int(parts.get("t", 0))
+    signature = parts.get("v1", "")
+    if not timestamp or not signature:
+        return False
+    if abs(time.time() - timestamp) > 300:
+        return False
+    expected = hmac.new(
+        secret.encode(),
+        f"{timestamp}.".encode() + raw_body,
+        hashlib.sha256,
+    ).hexdigest()
+    return hmac.compare_digest(expected, signature)
+```
 
 <Warning>
-  Verify the signature against the raw body before parsing or trusting the event. Do not use a re-serialized JSON body, because the bytes can change.
+  Verify the signature against the raw request body before parsing JSON. Re-serializing can change the bytes and invalidate the signature.
 </Warning>
 
 ## Retries and idempotency
 
-Events can be delivered more than once. Record the event ID and make your handler idempotent so a retry does not create a duplicate payment or order.
+Events can be delivered more than once. Store the event ID and make your handler idempotent so a retry does not double-credit an order or payment.
+
+## Test mode
+
+Test-mode events have `"livemode": false`. Use a test endpoint while integrating, then switch to your production endpoint before going live.

@@ -1,0 +1,104 @@
+---
+title: "Developer quickstart"
+sidebarTitle: "Quickstart"
+description: "Make your first Vine API request."
+icon: "rocket"
+---
+
+This guide takes you from an API key to a live payment link in a few minutes.
+
+## Before you start
+
+You need:
+
+- A Vine business account.
+- A test API key with the `PAYMENTS` scope.
+- A server or terminal that can make HTTPS requests.
+
+Create the key in **Dashboard → Developers → Test key**.
+
+## 1. Check the API
+
+```bash
+curl https://api.vine.ng/health
+```
+
+```json
+{ "status": "ok" }
+```
+
+## 2. List your payment links
+
+```bash
+curl https://api.vine.ng/v1/payment-links \
+  -H "Authorization: Bearer sk_test_your_key"
+```
+
+A new account returns an empty list:
+
+```json
+{
+  "links": [],
+  "mode": "TEST"
+}
+```
+
+## 3. Create a payment link
+
+```bash
+curl https://api.vine.ng/v1/payment-links \
+  -H "Authorization: Bearer sk_test_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Consulting session",
+    "amountKobo": 500000,
+    "paymentMethods": ["bank_transfer", "card"]
+  }'
+```
+
+```json
+{
+  "link": {
+    "id": "pl_123",
+    "slug": "consulting-session",
+    "title": "Consulting session",
+    "amountKobo": "500000",
+    "allowCustomAmount": false,
+    "paymentMethods": ["bank_transfer", "card"],
+    "payUrl": "https://vine.ng/pay/consulting-session",
+    "active": true
+  },
+  "mode": "TEST"
+}
+```
+
+Open `payUrl` to try the customer flow.
+
+## 4. Create a checkout session
+
+```bash
+curl https://api.vine.ng/v1/checkout/sessions \
+  -H "Authorization: Bearer sk_test_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amountKobo": 100000,
+    "customerEmail": "customer@example.com",
+    "paymentMethods": ["card"]
+  }'
+```
+
+The response includes a `checkoutUrl`. Redirect the customer there to pay.
+
+## 5. Receive a webhook
+
+Add an HTTPS endpoint in **Dashboard → Webhooks**. When the test payment succeeds, Vine sends a signed event to your server.
+
+See [Webhooks](/developers/webhooks) for signature verification.
+
+## Switch to live
+
+1. Complete verification in the dashboard.
+2. Create a live key with the same scopes.
+3. Replace `sk_test_...` with `sk_live_...` on your server.
+
+Test and live data are separate. A test key never touches live money.

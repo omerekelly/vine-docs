@@ -1,65 +1,90 @@
 ---
-title: "API essentials"
-description: "Authenticate with the Vine API and create a checkout session."
+title: "API overview"
+sidebarTitle: "Overview"
+description: "Build payment flows with the Vine developer API."
 icon: "code"
 ---
 
-The Vine developer API lets your own product collect payments, create checkout sessions, send invoices and pay bills.
-
-## Base URL
-
-All API requests use:
-
-```text
-https://api.vine.ng
-```
-
-The full OpenAPI reference is available at [api.vine.ng/api-docs](https://api.vine.ng/api-docs).
-
-## Authentication
-
-Create API keys in **Dashboard → Developers**. Business accounts can create live and test keys.
-
-<Warning>
-  Treat API keys as secrets. Store them in a server-side secret manager and never expose them in browser code. A key is shown only once.
-</Warning>
-
-Send the key as a bearer token:
-
-```bash
-curl https://api.vine.ng/v1/checkout/sessions \
-  -H "Authorization: Bearer sk_live_your_key" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "amountKobo": 5000000,
-    "customerEmail": "customer@example.com",
-    "paymentMethods": ["bank_transfer", "card"]
-  }'
-```
-
-Use `sk_test_...` keys for test mode and `sk_live_...` keys for real payments.
+The Vine developer API lets your server create payment links, hosted checkout sessions, invoices and bill payments. Use it when you want Vine to handle collection while your product controls the customer experience.
 
 <Note>
   Login, registration, account management, wallet operations, KYC, store settings and provider webhooks are dashboard endpoints. They are not part of the developer API and cannot be called with an API key.
 </Note>
 
-## Create a checkout session
+## Base URL
 
-The request above creates a hosted checkout session. The response includes a `checkoutUrl` that you can redirect the customer to.
-
-Amounts are in kobo. `5000000` means ₦50,000.
-
-## Errors
-
-Failed requests return a JSON body with an error message and a code:
-
-```json
-{
-  "error": "Amount must be greater than zero",
-  "code": "VALIDATION_ERROR"
-}
+```text
+https://api.vine.ng
 ```
 
-## Webhooks
+All requests and responses use JSON. Amounts are in kobo.
 
-Use [webhooks](/developers/webhooks) to receive payment events on your server instead of polling the API.
+## Authentication
+
+Create an API key in **Dashboard → Developers**, then send it as a bearer token:
+
+```http
+Authorization: Bearer sk_test_your_key
+```
+
+<Warning>
+  API keys are secrets. Keep them on your server. Never put a key in browser code or a mobile app.
+</Warning>
+
+Keys are mode-bound:
+
+| Key prefix | Mode | Use for |
+| --- | --- | --- |
+| `sk_test_...` | Test | Building and testing |
+| `sk_live_...` | Live | Real customer payments |
+
+## Scopes
+
+Each key only unlocks the scopes selected when it was created.
+
+| Scope | What it unlocks |
+| --- | --- |
+| `PAYMENTS` | Payment links, invoices, digital products and courses |
+| `BILLS` | Bill categories, validation and payments |
+| `CHECKOUT` | Hosted checkout sessions |
+
+Missing a scope returns `403 INSUFFICIENT_SCOPE`.
+
+## Endpoints
+
+<Columns cols={2}>
+  <Card title="Payment links" icon="link" href="/developers/payment-links">
+    Create a link, share it and collect payments.
+  </Card>
+
+  <Card title="Hosted checkout" icon="credit-card" href="/developers/checkout">
+    Create a checkout session and redirect the customer.
+  </Card>
+
+  <Card title="Invoices" icon="file-invoice" href="/developers/invoices">
+    Create, send and track invoices.
+  </Card>
+
+  <Card title="Bills" icon="receipt" href="/developers/bills">
+    Validate a customer reference and pay a bill.
+  </Card>
+
+  <Card title="Webhooks" icon="bolt" href="/developers/webhooks">
+    Receive signed events on your server.
+  </Card>
+
+  <Card title="Errors" icon="triangle-exclamation" href="/developers/errors">
+    Handle error codes and retries.
+  </Card>
+</Columns>
+
+## Amounts
+
+All monetary fields are integers in kobo:
+
+- `100` = ₦1
+- `500000` = ₦5,000
+
+## Next steps
+
+Start with the [quickstart](/developers/quickstart), then read the guide for the endpoint you need.
