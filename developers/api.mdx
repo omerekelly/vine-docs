@@ -1,0 +1,61 @@
+---
+title: "API essentials"
+description: "Authenticate with the Vine API and create a checkout session."
+icon: "code"
+---
+
+The Vine API lets your own product collect payments and manage Vine resources.
+
+## Base URL
+
+All API requests use:
+
+```text
+https://api.vine.ng
+```
+
+The full OpenAPI reference is available at [api.vine.ng/api-docs](https://api.vine.ng/api-docs).
+
+## Authentication
+
+Create API keys in **Dashboard → Developers**. Business accounts can create live and test keys.
+
+<Warning>
+  Treat API keys as secrets. Store them in a server-side secret manager and never expose them in browser code. A key is shown only once.
+</Warning>
+
+Send the key as a bearer token:
+
+```bash
+curl https://api.vine.ng/v1/checkout/sessions \
+  -H "Authorization: Bearer sk_live_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amountKobo": 5000000,
+    "customerEmail": "customer@example.com",
+    "paymentMethods": ["bank_transfer", "card"]
+  }'
+```
+
+Use `sk_test_...` keys for test mode and `sk_live_...` keys for real payments.
+
+## Create a checkout session
+
+The request above creates a hosted checkout session. The response includes a `checkoutUrl` that you can redirect the customer to.
+
+Amounts are in kobo. `5000000` means ₦50,000.
+
+## Errors
+
+Failed requests return a JSON body with an error message and a code:
+
+```json
+{
+  "error": "Amount must be greater than zero",
+  "code": "VALIDATION_ERROR"
+}
+```
+
+## Webhooks
+
+Use [webhooks](/developers/webhooks) to receive payment events on your server instead of polling the API.

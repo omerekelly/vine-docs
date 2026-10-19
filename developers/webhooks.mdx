@@ -1,0 +1,45 @@
+---
+title: "Webhooks"
+description: "Receive signed payment events on your server."
+icon: "bolt"
+---
+
+Webhooks let your server react when a payment succeeds, fails or changes state.
+
+## Configure a webhook
+
+<Steps>
+  <Step title="Open Webhooks">
+    In the dashboard, go to **Webhooks**.
+  </Step>
+  <Step title="Add your endpoint">
+    Enter the HTTPS URL that should receive events.
+  </Step>
+  <Step title="Copy the signing secret">
+    Vine creates a secret beginning with `whsec_`. Store it securely on your server.
+  </Step>
+</Steps>
+
+## Verify the signature
+
+Each request includes an `X-Vine-Signature` header:
+
+```text
+t=1710000000,v1=hex-encoded-hmac
+```
+
+To verify a request:
+
+1. Read the raw request body.
+2. Build the signed string `<timestamp>.<raw body>`.
+3. Compute an HMAC SHA-256 using your `whsec_` secret.
+4. Compare it with `v1` using a constant-time comparison.
+5. Reject requests whose timestamp is more than 5 minutes old.
+
+<Warning>
+  Verify the signature against the raw body before parsing or trusting the event. Do not use a re-serialized JSON body, because the bytes can change.
+</Warning>
+
+## Retries and idempotency
+
+Events can be delivered more than once. Record the event ID and make your handler idempotent so a retry does not create a duplicate payment or order.

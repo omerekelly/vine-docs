@@ -1,37 +1,63 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Mintlify Starter Kit",
+  "name": "Vine",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#0C0C0C",
+    "light": "#3A3A36",
+    "dark": "#D9F56F"
   },
   "favicon": "/favicon.svg",
   "navigation": {
     "pages": [
       {
-        "group": "Getting Started",
+        "group": "Getting started",
         "pages": [
           "index",
           "quickstart"
+        ],
+        "icon": "rocket"
+      },
+      {
+        "group": "Payments",
+        "icon": "credit-card",
+        "pages": [
+          "payments/payment-links",
+          "payments/checkout",
+          "payments/invoices"
+        ]
+      },
+      {
+        "group": "Storefront",
+        "icon": "store",
+        "pages": [
+          "storefront/overview"
+        ]
+      },
+      {
+        "group": "Money",
+        "icon": "wallet",
+        "pages": [
+          "money/wallet-and-payouts"
+        ]
+      },
+      {
+        "group": "Developers",
+        "icon": "code",
+        "pages": [
+          "developers/api",
+          "developers/webhooks"
+        ]
+      },
+      {
+        "group": "Account",
+        "icon": "shield-check",
+        "pages": [
+          "account/verification",
+          "account/security"
         ]
       }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
-        }
-      ]
-    }
+    ]
   },
   "logo": {
     "light": "/logo/light.svg",
@@ -40,14 +66,18 @@
   "navbar": {
     "links": [
       {
+        "href": "https://vine.ng",
+        "label": "Website"
+      },
+      {
         "label": "Support",
-        "href": "mailto:support@mintlify.com"
+        "href": "mailto:support@vine.ng"
       }
     ],
     "primary": {
       "type": "button",
       "label": "Dashboard",
-      "href": "https://app.mintlify.com"
+      "href": "https://console.vine.ng"
     }
   },
   "contextual": {
@@ -61,12 +91,5 @@
       "cursor",
       "vscode"
     ]
-  },
-  "footer": {
-    "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
-    }
   }
 }
