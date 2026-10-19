@@ -13,11 +13,12 @@ The Vine developer API lets your server create payment links, hosted checkout se
 
 ## Base URL
 
-```text
-https://api.vine.ng
-```
+| Environment | Base URL | Key |
+| --- | --- | --- |
+| Sandbox | `https://sandbox.vine.ng` | `sk_test_...` |
+| Production | `https://api.vine.ng` | `sk_live_...` |
 
-All requests and responses use JSON. Amounts are in kobo.
+Use the [sandbox](/developers/sandbox) while building. All requests and responses use JSON, and amounts are in kobo.
 
 ## Authentication
 

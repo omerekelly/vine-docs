@@ -20,7 +20,7 @@ Create the key in **Dashboard → Developers → Test key**.
 ## 1. Check the API
 
 ```bash
-curl https://api.vine.ng/health
+curl https://sandbox.vine.ng/health
 ```
 
 ```json
@@ -30,7 +30,7 @@ curl https://api.vine.ng/health
 ## 2. List your payment links
 
 ```bash
-curl https://api.vine.ng/v1/payment-links \
+curl https://sandbox.vine.ng/v1/payment-links \
   -H "Authorization: Bearer sk_test_your_key"
 ```
 
@@ -46,7 +46,7 @@ A new account returns an empty list:
 ## 3. Create a payment link
 
 ```bash
-curl https://api.vine.ng/v1/payment-links \
+curl https://sandbox.vine.ng/v1/payment-links \
   -H "Authorization: Bearer sk_test_your_key" \
   -H "Content-Type: application/json" \
   -d '{
@@ -77,7 +77,7 @@ Open `payUrl` to try the customer flow.
 ## 4. Create a checkout session
 
 ```bash
-curl https://api.vine.ng/v1/checkout/sessions \
+curl https://sandbox.vine.ng/v1/checkout/sessions \
   -H "Authorization: Bearer sk_test_your_key" \
   -H "Content-Type: application/json" \
   -d '{
@@ -99,6 +99,7 @@ See [Webhooks](/developers/webhooks) for signature verification.
 
 1. Complete verification in the dashboard.
 2. Create a live key with the same scopes.
+3. Change your base URL from `https://sandbox.vine.ng` to `https://api.vine.ng`.
 3. Replace `sk_test_...` with `sk_live_...` on your server.
 
 Test and live data are separate. A test key never touches live money.

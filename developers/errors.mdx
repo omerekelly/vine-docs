@@ -33,6 +33,7 @@ Failed requests return a JSON body with a human-readable message and a stable co
 | `INVALID_API_KEY` | The key is wrong, revoked or for the wrong mode. |
 | `INSUFFICIENT_SCOPE` | The key is missing the scope this endpoint needs. |
 | `DASHBOARD_ONLY` | The endpoint is a dashboard/session endpoint, not part of the developer API. |
+| `SANDBOX_REQUIRES_TEST_KEY` | Live API keys cannot be used on `sandbox.vine.ng`. Use an `sk_test_...` key. |
 | `KYC_REQUIRED` | The account must complete verification first. |
 | `RATE_LIMIT` | Too many requests. Wait and retry. |
 | `NOT_FOUND` | The resource does not exist in the current mode. |

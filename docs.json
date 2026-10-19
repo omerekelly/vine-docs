@@ -46,6 +46,7 @@
         "icon": "code",
         "pages": [
           "developers/api",
+          "developers/sandbox",
           "developers/quickstart",
           "developers/payment-links",
           "developers/checkout",

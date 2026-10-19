@@ -1,0 +1,49 @@
+---
+title: "Sandbox"
+sidebarTitle: "Sandbox"
+description: "Build and test against the Vine sandbox."
+icon: "flask"
+---
+
+The sandbox is a test-only Vine environment at:
+
+```text
+https://sandbox.vine.ng
+```
+
+Use it while integrating. No real money moves.
+
+## What is different
+
+- Only `sk_test_...` API keys work. Live keys are rejected with `SANDBOX_REQUIRES_TEST_KEY`.
+- The sandbox dashboard is forced into test mode.
+- Test and live data are separate.
+- Webhooks from sandbox payments have `"livemode": false`.
+- Verification requirements for test payments are relaxed.
+
+## Create a test key
+
+1. Sign in at [console.vine.ng](https://console.vine.ng).
+2. Open **Developers**.
+3. Create a **Test key** with the scopes you need.
+
+Use the key with the sandbox host:
+
+```bash
+curl https://sandbox.vine.ng/v1/payment-links \
+  -H "Authorization: Bearer sk_test_your_key"
+```
+
+## Sandbox dashboard
+
+Open [sandbox.vine.ng](https://sandbox.vine.ng) to use the dashboard in test mode. The Live/Test switch is replaced by a Sandbox badge, so you cannot accidentally switch to live money.
+
+## Go live
+
+When you are ready:
+
+1. Switch your base URL from `https://sandbox.vine.ng` to `https://api.vine.ng`.
+2. Replace your `sk_test_...` key with `sk_live_...`.
+3. Point webhooks at your production endpoint.
+
+Test data is not copied to live.
