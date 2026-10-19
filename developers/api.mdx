@@ -41,9 +41,14 @@ Each key only unlocks the scopes selected when it was created.
 
 | Scope | What it unlocks |
 | --- | --- |
-| `PAYMENTS` | Payment links, invoices, digital products and courses |
-| `BILLS` | Bill categories, validation and payments |
+| `PAYMENT_LINKS` | Create and manage payment links |
+| `INVOICES` | Create, send and manage invoices |
 | `CHECKOUT` | Hosted checkout sessions |
+| `PRODUCTS` | Digital products and shop products |
+| `COURSES` | Courses and enrolments |
+| `BILLS` | Bill categories, validation and payments |
+| `SIMS` | SIMs and airtime/data operations |
+| `PAYMENTS` | Legacy broad scope for all payment resources |
 
 Missing a scope returns `403 INSUFFICIENT_SCOPE`.
 
