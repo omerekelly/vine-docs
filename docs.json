@@ -47,6 +47,7 @@
         "pages": [
           "developers/api",
           "developers/sandbox",
+          "developers/mcp",
           "developers/quickstart",
           "developers/payment-links",
           "developers/checkout",

@@ -1,0 +1,81 @@
+---
+title: "MCP server"
+sidebarTitle: "MCP server"
+description: "Use Vine from Claude, Cursor and other MCP clients."
+icon: "plug"
+---
+
+Vine exposes a Model Context Protocol (MCP) server so AI agents and developer tools can create payment links, checkout sessions and invoices.
+
+## Endpoint
+
+```text
+https://api.vine.ng/mcp
+```
+
+For test mode through the sandbox host:
+
+```text
+https://sandbox.vine.ng/mcp
+```
+
+## Authentication
+
+Use a Vine API key as a bearer token:
+
+```http
+Authorization: Bearer sk_test_your_key
+```
+
+<Warning>
+  API keys are secrets. Configure them in your MCP client's local settings and never commit them to a repository.
+</Warning>
+
+## Client configuration
+
+Most MCP clients accept a remote HTTP server entry like this:
+
+```json
+{
+  "mcpServers": {
+    "vine": {
+      "type": "http",
+      "url": "https://api.vine.ng/mcp",
+      "headers": {
+        "Authorization": "Bearer sk_test_your_key"
+      }
+    }
+  }
+}
+```
+
+Restart the client after changing the configuration.
+
+## Tools
+
+| Tool | Scope | What it does |
+| --- | --- | --- |
+| `create_payment_link` | `PAYMENTS` | Create a shareable payment link. |
+| `list_payment_links` | `PAYMENTS` | List payment links. |
+| `create_checkout_session` | `CHECKOUT` | Create a hosted checkout session. |
+| `get_checkout_session` | `CHECKOUT` | Retrieve a checkout session. |
+| `create_invoice` | `PAYMENTS` | Create an invoice with line items. |
+| `list_invoices` | `PAYMENTS` | List invoices. |
+| `get_invoice` | `PAYMENTS` | Retrieve an invoice. |
+| `send_invoice` | `PAYMENTS` | Email an invoice. |
+| `mark_invoice_paid` | `PAYMENTS` | Mark an invoice paid manually. |
+
+## Example prompts
+
+Once the server is connected, you can ask your client:
+
+- “Create a ₦25,000 payment link for a design retainer.”
+- “Create a checkout for ₦5,000 and send me the link.”
+- “List my unpaid invoices.”
+- “Send invoice INV-0042 to the client.”
+
+Amounts passed to the tools are in kobo: `2500000` means ₦25,000.
+
+## Scopes and modes
+
+The MCP server uses the same API key scopes and live/test separation as the REST API. A key without the required scope returns a tool error. Use `sk_test_...` while testing and `sk_live_...` for real payments.
