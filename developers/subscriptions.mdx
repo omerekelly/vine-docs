@@ -29,7 +29,7 @@ curl https://api.vine.ng/v1/billing/plans \
   }'
 ```
 
-The response includes the plan and a `shareUrl`. Send customers to that link to subscribe. Amounts are in kobo.
+The response includes the plan and a `shareUrl`. Send customers to that link to subscribe. Amounts are in the smallest unit: kobo for NGN, cents for USD. Add `"currency": "USD"` to create a USD subscription plan.
 
 ```json
 {
