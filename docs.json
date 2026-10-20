@@ -24,7 +24,8 @@
         "pages": [
           "payments/payment-links",
           "payments/checkout",
-          "payments/invoices"
+          "payments/invoices",
+          "payments/international"
         ]
       },
       {

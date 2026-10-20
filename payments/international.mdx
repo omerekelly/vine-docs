@@ -1,0 +1,40 @@
+---
+title: "International payments"
+sidebarTitle: "International payments"
+description: "Accept USD cards, mobile money and stablecoins."
+icon: "globe"
+---
+
+## What you can accept
+
+| Method | Currencies | Fee |
+| --- | --- | --- |
+| International cards | USD | 4.5% + 40 cents |
+| Mobile money (Ghana, Kenya) | GHS, KES | 2% |
+| Mobile money (other African markets) | XAF, XOF, UGX, ZMW, TZS, RWF | 3% |
+| Stablecoins | USDC, USDT on supported networks | 1.5% |
+
+International cards include Visa, Mastercard and supported digital wallets. Mobile money includes M-Pesa, MTN MoMo, Airtel Money and other wallets available in the destination market.
+
+## USD collections
+
+USD card and mobile money collections settle into your **USD collections** balance. Open **Wallet → Global collections** to see the balance. Local mobile money balances are shown in their own currency.
+
+## Payouts
+
+Open **Payout** to withdraw USD collections:
+
+- **Naira bank account:** converts USD to Naira at the current Vine rate and sends to your linked bank account.
+- **USDT wallet:** sends USDT to a wallet you link once, on Base or Ethereum.
+
+ACH is not supported.
+
+## Pass fees to customers
+
+In **Settings → Business → Processing fees**, enable **Pass fees to customers**. The processing fee is then added to the customer's checkout total, and you receive the full sale amount.
+
+## Creating a USD checkout
+
+Call `POST /v1/checkout/sessions` with `currency: "USD"`. The checkout page supports international cards, digital wallets, mobile money and stablecoins.
+
+Public checkout links use the same format as Naira checkout.
