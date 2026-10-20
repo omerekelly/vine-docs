@@ -38,7 +38,8 @@
         "group": "Money",
         "icon": "wallet",
         "pages": [
-          "money/wallet-and-payouts"
+          "money/wallet-and-payouts",
+          "money/sims-and-plans"
         ]
       },
       {
