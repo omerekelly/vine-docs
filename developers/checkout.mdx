@@ -21,7 +21,7 @@ Create a hosted checkout session when you want Vine to handle the payment page.
 | Field | Type | Required | Notes |
 | --- | --- | --- | --- |
 | `amountKobo` | integer | Yes | Amount in kobo. |
-| `currency` | string | No | Only `NGN`. |
+| `currency` | string | No | `NGN` by default. Supports `USD`, `GHS`, `KES`, `XOF`, `XAF`, `UGX`, `ZMW`, `TZS` and `RWF` where enabled. |
 | `customerEmail` | string | No | Used for the receipt. |
 | `paymentMethods` | string[] | No | `bank_transfer`, `card`, `crypto`. |
 | `successUrl` | URL | No | Where to send the customer after payment. |
