@@ -9,7 +9,7 @@ icon: "sim-card"
 
 SIM plans are workspace subscriptions that control how many SIMs a business can link and manage. The monthly fee is charged from the workspace deposit balance.
 
-Choose or change a plan in the dashboard under **SIM plans** at [console.vine.ng/subscriptions](https://console.vine.ng/subscriptions). Plan changes take effect immediately after a successful charge.
+Choose or change a plan in the dashboard under **SIM plans** at [console.vine.ng/sim-plans](https://console.vine.ng/sim-plans). Plan changes take effect immediately after a successful charge.
 
 Each business workspace has its own plan and its own linked SIMs.
 
@@ -67,4 +67,4 @@ curl https://api.vine.ng/v1/sims/link \
 
 The plan purchase and renewal flow is dashboard-only because it debits the workspace deposit balance and requires an authenticated merchant session. SIM management can then be automated with an API key that has the `SIMS` scope.
 
-Recurring subscription billing for a merchant's own customers is a separate product and is not part of the SIM plan API.
+Recurring subscription billing for a merchant's own customers is a separate product. See the [Subscriptions API](/developers/subscriptions).

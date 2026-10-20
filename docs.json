@@ -55,7 +55,8 @@
           "developers/invoices",
           "developers/bills",
           "developers/webhooks",
-          "developers/errors"
+          "developers/errors",
+          "developers/subscriptions"
         ]
       },
       {

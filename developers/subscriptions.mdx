@@ -1,0 +1,85 @@
+---
+title: "Subscriptions API"
+sidebarTitle: "Subscriptions API"
+description: "Create recurring plans and manage customer subscriptions."
+icon: "arrows-rotate"
+---
+
+Subscriptions let a business charge a customer automatically on a recurring schedule. A plan defines the amount and interval. The customer accepts a recurring-payment mandate on a secure Vine page, pays the first period, and later renewals are charged to the saved card.
+
+Create an API key with the `SUBSCRIPTIONS` scope in **Dashboard → Developers**.
+
+## Create a plan
+
+`POST /v1/billing/plans`
+
+```bash
+curl https://api.vine.ng/v1/billing/plans \
+  -H "Authorization: Bearer sk_live_..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Pro membership",
+    "description": "Monthly access to the Pro community",
+    "amountKobo": 500000,
+    "interval": "MONTHLY"
+  }'
+```
+
+The response includes the plan and a `shareUrl`. Send customers to that link to subscribe. Amounts are in kobo.
+
+```json
+{
+  "plan": {
+    "id": "pln_...",
+    "name": "Pro membership",
+    "amountKobo": "500000",
+    "interval": "MONTHLY",
+    "shareUrl": "https://vine.ng/subscribe/pln_..."
+  }
+}
+```
+
+## List and update plans
+
+| Method | Endpoint | Description |
+| - | - | - |
+| GET | `/v1/billing/plans` | List plans for the active workspace and mode |
+| POST | `/v1/billing/plans` | Create a plan |
+| PATCH | `/v1/billing/plans/:id` | Update name, amount, interval or active state |
+
+Supported intervals are `MONTHLY` and `ANNUAL`.
+
+## Manage subscriptions
+
+| Method | Endpoint | Description |
+| - | - | - |
+| GET | `/v1/billing/subscriptions` | List subscriptions and their next charge |
+| POST | `/v1/billing/subscriptions/:id/cancel` | Stop future renewals |
+| POST | `/v1/billing/subscriptions/:id/charge` | Retry a failed renewal |
+
+## How the customer flow works
+
+1. You create a plan and share its `shareUrl`.
+2. The customer reviews the amount and interval, accepts the recurring mandate and pays the first period by card.
+3. Vine saves a tokenized card for the workspace. The mandate text, time and IP are stored with the subscription.
+4. Renewals are charged automatically. Failed charges retry after 1, 3 and 5 days; a subscription moves to past due after the final retry.
+5. Cancelling a subscription stops all future charges.
+
+Test-mode plans use test keys and do not move real money.
+
+## Webhook events
+
+Subscribe to these events in **Dashboard → Webhooks**:
+
+| Event | When it fires |
+| - | - |
+| `subscription.created` | The first payment succeeds and the subscription becomes active |
+| `subscription.payment_succeeded` | A first or renewal payment succeeds |
+| `subscription.payment_failed` | A renewal attempt fails |
+| `subscription.cancelled` | The business cancels the subscription |
+
+Webhook data includes `subscriptionId`, `planId`, `customerEmail`, `amountKobo`, `feeKobo`, `netKobo`, `periodStart` and `periodEnd`.
+
+<Note>
+  The public subscription page handles card collection and mandate consent. Do not collect raw card details in your own servers.
+</Note>
