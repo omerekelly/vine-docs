@@ -39,7 +39,7 @@
         "icon": "wallet",
         "pages": [
           "money/wallet-and-payouts",
-          "money/sims-and-plans"
+          "money/store-plans"
         ]
       },
       {
@@ -101,5 +101,12 @@
       "cursor",
       "vscode"
     ]
-  }
+  },
+  "redirects": [
+    {
+      "source": "/money/sims-and-plans",
+      "destination": "/money/store-plans",
+      "permanent": true
+    }
+  ]
 }

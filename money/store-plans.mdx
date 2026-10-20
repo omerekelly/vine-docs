@@ -1,0 +1,103 @@
+---
+title: "Store plans"
+sidebarTitle: "Store plans"
+description: "Choose a monthly or yearly plan for your Vine storefront."
+icon: "store"
+---
+
+Vine store plans cover your storefront. There are two plans, and each can be billed monthly or yearly from your workspace deposit balance.
+
+| Plan | Monthly | Yearly | Best for |
+| --- | --- | --- | --- |
+| **Store Basic** | ₦1,500 | ₦15,000 | Opening a storefront and selling products, downloads or courses. |
+| **Store Pro** | ₦3,500 | ₦35,000 | Stores that need premium themes, a custom domain and a free .com domain. |
+
+Yearly billing costs 10 months and covers 12. Every workspace has its own plan.
+
+## What is included
+
+<Columns cols={2}>
+  <Card title="Store Basic" icon="store">
+    - Storefront at `your-business.vine.ng`
+    - Shop products, digital downloads and courses
+    - Orders, customers and discounts
+    - Standard store themes
+  </Card>
+
+  <Card title="Store Pro" icon="crown">
+    - Everything in Store Basic
+    - Premium store themes
+    - Connect your own custom domain
+    - One free custom .com domain **on yearly billing only**
+  </Card>
+</Columns>
+
+## Free .com domain
+
+Store Pro **yearly** includes one free custom .com domain for the first year. Store Pro monthly does not include the domain, though you can still connect a domain you already own.
+
+After subscribing to Store Pro yearly:
+
+1. Open **Store settings → Domain**.
+2. Enter the `.com` domain you want under **Claim your free .com domain**.
+3. Submit the request. Vine registers the domain in your name and connects it to your storefront.
+
+If you are on Store Pro monthly, the Domain page shows an upgrade prompt. Switch to yearly billing to claim the free domain.
+
+## Choose or change your plan
+
+1. In the dashboard, open **Store plans**.
+2. Choose monthly or yearly billing.
+2. Pick Store Basic or Store Pro.
+3. Confirm the charge. The fee is taken from your deposit balance.
+
+A plan change starts a new period immediately: 30 days for monthly, one year for yearly. Top up your deposit balance first if it is below the plan price.
+
+Plans are prepaid and do not renew automatically. Renew from **Store plans** before the period ends.
+
+<Note>
+  Plan changes are dashboard-only because they debit your workspace deposit balance. The plan catalogue is available publicly at `GET /v1/plans`.
+</Note>
+
+## Plan catalogue API
+
+`GET /v1/plans` is public and returns the active plans.
+
+```bash
+curl https://api.vine.ng/v1/plans
+```
+
+```json
+{
+  "plans": [
+    {
+      "slug": "starter",
+      "name": "Store Basic",
+      "priceMonthlyKobo": 150000,
+      "priceYearlyKobo": 1500000,
+      "premiumThemes": false,
+      "customDomain": false,
+      "freeDomain": false
+    },
+    {
+      "slug": "pro",
+      "name": "Store Pro",
+      "priceMonthlyKobo": 350000,
+      "priceYearlyKobo": 3500000,
+      "premiumThemes": true,
+      "customDomain": true,
+      "freeDomain": true
+    }
+  ]
+}
+```
+
+Amounts are in kobo. `150000` is ₦1,500.
+
+The `freeDomain` flag marks the plan that can include a free domain. The benefit applies only when the subscription interval is `ANNUAL`.
+
+## Related
+
+- [Storefront overview](/storefront/overview)
+- [Wallet and payouts](/money/wallet-and-payouts)
+- [Recurring billing API](/developers/subscriptions) — charge your own customers on a recurring schedule.
