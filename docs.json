@@ -7,7 +7,7 @@
     "light": "#3A3A36",
     "dark": "#D9F56F"
   },
-  "favicon": "/favicon.svg",
+  "favicon": "/images/vine-favicon.png",
   "navigation": {
     "pages": [
       {
@@ -73,8 +73,8 @@
     ]
   },
   "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
+    "light": "/images/vine-logo.png",
+    "dark": "/images/vine-logo-white.png"
   },
   "navbar": {
     "links": [
