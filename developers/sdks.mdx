@@ -1,0 +1,72 @@
+---
+title: "SDKs"
+sidebarTitle: "SDKs"
+description: "Server-side clients for JavaScript, Python, PHP and Go."
+---
+
+Official server-side clients for the Vine payments API. Create checkout sessions, payment links and invoices, and verify webhooks.
+
+| Language | Package | Entry point |
+| --- | --- | --- |
+| JavaScript / TypeScript | `@vine/sdk` | `sdks/javascript/vine.js` |
+| Python | `vine-sdk` | `sdks/python/vine.py` |
+| PHP | `vine/sdk` | `sdks/php/src/VineClient.php` |
+| Go | `github.com/omerekelly/vine/sdks/go` | `sdks/go/vine.go` |
+
+## JavaScript
+
+```js
+import { VineClient, verifyWebhook } from "@vine/sdk";
+
+const vine = new VineClient({ apiKey: process.env.VINE_SECRET_KEY });
+const session = await vine.createCheckoutSession({
+  amountKobo: 500000,
+  customerEmail: "customer@example.com",
+  successUrl: "https://your-site.com/order/complete",
+});
+```
+
+## Python
+
+```python
+from vine import VineClient, verify_webhook
+
+vine = VineClient("sk_live_...")
+session = vine.create_checkout_session(
+    amountKobo=500000,
+    customerEmail="customer@example.com",
+    successUrl="https://your-site.com/order/complete",
+)
+```
+
+## PHP
+
+```php
+use Vine\VineClient;
+
+$vine = new VineClient('sk_live_...');
+$session = $vine->createCheckoutSession([
+    'amountKobo' => 500000,
+    'customerEmail' => 'customer@example.com',
+    'successUrl' => 'https://your-site.com/order/complete',
+]);
+```
+
+## Go
+
+```go
+client := vine.New(os.Getenv("VINE_SECRET_KEY"))
+session, err := client.CreateCheckoutSession(map[string]any{
+    "amountKobo": 500000,
+    "customerEmail": "customer@example.com",
+    "successUrl": "https://your-site.com/order/complete",
+})
+```
+
+## Webhooks
+
+Vine signs outbound webhooks with `X-Vine-Signature: t=<unix>,v1=<hex>`. The signature is an HMAC SHA256 of `<t>.<raw body>`. Verify it with the SDK helper before parsing the payload.
+
+<Card title="Embedded checkout" href="/developers/embedded-checkout">
+  Open the checkout inside your website with the VineCheckout script.
+</Card>

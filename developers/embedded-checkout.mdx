@@ -1,0 +1,90 @@
+---
+title: "Embedded checkout"
+sidebarTitle: "Embedded checkout"
+description: "Open the Vine checkout inside your website without sending the customer away."
+---
+
+Vine checkout can run inside your website. Load a small script from Vine and open the checkout in a modal or inline frame.
+
+## Create a checkout session
+
+Create the session from your server with a live or test API key. Keep the key on the server.
+
+```bash
+curl https://api.vine.ng/v1/checkout/sessions \
+  -H "Authorization: Bearer sk_live_..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amountKobo": 500000,
+    "currency": "NGN",
+    "customerEmail": "customer@example.com",
+    "paymentMethods": ["card", "bank_transfer"],
+    "successUrl": "https://your-site.com/order/complete"
+  }'
+```
+
+The response contains a checkout session id. Pass that id to the embedded checkout.
+
+## Load the script
+
+```html
+<script src="https://vine.ng/embed/v1.js"></script>
+```
+
+## Open a modal
+
+```html
+<button id="pay">Pay with Vine</button>
+<script>
+  document.getElementById("pay").addEventListener("click", function () {
+    VineCheckout.open({
+      sessionId: "CHECKOUT_SESSION_ID",
+      onSuccess: function (event) {
+        console.log("paid", event.sessionId);
+      },
+      onClose: function () {
+        console.log("checkout closed");
+      }
+    });
+  });
+</script>
+```
+
+## Mount inline
+
+```html
+<div id="vine-checkout"></div>
+<script>
+  VineCheckout.mount(document.getElementById("vine-checkout"), {
+    sessionId: "CHECKOUT_SESSION_ID",
+    height: 760,
+    onSuccess: function (event) {
+      console.log("paid", event.sessionId);
+    }
+  });
+</script>
+```
+
+The frame reports its height while the customer moves through checkout, so inline embeds stay the right size.
+
+## Options
+
+| Option | Description |
+| --- | --- |
+| `sessionId` | Checkout session id from the API. Required unless `url` is passed. |
+| `url` | Full checkout URL. Useful when you already have a session URL. |
+| `baseUrl` | Vine origin. Defaults to `https://vine.ng`. Use `https://sandbox.vine.ng` for test mode. |
+| `title` | Accessible frame title. |
+| `height` | Initial inline height. |
+| `onSuccess` | Called with `{ sessionId }` after payment succeeds. |
+| `onClose` | Called when the customer closes the modal. |
+
+## Security
+
+- Create sessions on your server. Never put an API key in browser code.
+- The script only accepts messages from the Vine frame it created.
+- Only `/checkout/*` and `/embed/*` allow framing. The rest of Vine denies framing.
+
+<Card title="Open the demo" href="https://vine.ng/embed/demo.html">
+  Try the modal and inline embed with a checkout session.
+</Card>

@@ -57,7 +57,9 @@
           "developers/bills",
           "developers/webhooks",
           "developers/errors",
-          "developers/subscriptions"
+          "developers/subscriptions",
+          "developers/embedded-checkout",
+          "developers/sdks"
         ]
       },
       {
