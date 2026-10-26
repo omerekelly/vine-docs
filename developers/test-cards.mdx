@@ -1,0 +1,50 @@
+---
+title: "Test cards"
+sidebarTitle: "Test cards"
+description: "Card numbers, OTPs and 3-D Secure steps for Vine test mode."
+icon: "credit-card"
+---
+
+Test mode lets you run the full card flow without moving real money. Create a test-mode checkout session, then pay with one of the cards below.
+
+<Note>
+  Test cards only work in test mode. They are declined in live mode.
+</Note>
+
+## Test cards
+
+| Card number | Network | Result |
+| --- | --- | --- |
+| `5434 6210 7425 2808` | Mastercard | OTP required. Enter `9999` to approve. |
+| `4000 0000 0000 2503` | Visa | Simulated 3-D Secure. Choose complete or fail on the test page. |
+| `5484 4972 1831 7651` | Mastercard | Declined with “do not honor”. |
+
+Use any future expiry date and any 3-digit CVV. The card number decides the outcome.
+
+## OTP codes
+
+| Code | Result |
+| --- | --- |
+| `9999` | Payment approved |
+| `1234` | Payment times out |
+| `5464` | Invalid OTP |
+
+## 3-D Secure
+
+The Visa test card opens a simulated bank page inside checkout. Choose **Complete authentication** to approve the payment, or **Fail authentication** to decline it.
+
+## Test mode in checkout
+
+When a checkout session is in test mode, the checkout shows a **Test mode** badge. On the card form, open **Test cards and OTP codes** to see the cards without leaving the page.
+
+## Try the demo
+
+<Card title="Open the embedded checkout demo" href="https://vine.ng/embed/demo.html">
+  The demo creates a test-mode session automatically. Pay with one of the test cards above.
+</Card>
+
+## Good to know
+
+- Test payments settle to the test-mode ledger only.
+- A test session cannot charge a real card.
+- Live mode ignores test card outcomes and sends the card to the payment provider.

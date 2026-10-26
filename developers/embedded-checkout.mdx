@@ -10,6 +10,10 @@ Vine checkout can run inside your website. Load a small script from Vine and ope
 
 Create the session from your server with a live or test API key. Keep the key on the server.
 
+<Note>
+  For test mode, create the session in test mode and pay with the cards listed in [Test cards](/developers/test-cards).
+</Note>
+
 ```bash
 curl https://api.vine.ng/v1/checkout/sessions \
   -H "Authorization: Bearer sk_live_..." \
@@ -73,11 +77,17 @@ The frame reports its height while the customer moves through checkout, so inlin
 | --- | --- |
 | `sessionId` | Checkout session id from the API. Required unless `url` is passed. |
 | `url` | Full checkout URL. Useful when you already have a session URL. |
-| `baseUrl` | Vine origin. Defaults to `https://vine.ng`. Use `https://sandbox.vine.ng` for test mode. |
+| `baseUrl` | Vine origin. Defaults to `https://vine.ng`. |
 | `title` | Accessible frame title. |
 | `height` | Initial inline height. |
 | `onSuccess` | Called with `{ sessionId }` after payment succeeds. |
 | `onClose` | Called when the customer closes the modal. |
+
+## Test mode
+
+Test mode runs the same checkout flow without moving real money. The demo creates a test-mode session for you. Use the cards in [Test cards](/developers/test-cards) to approve, decline, or trigger OTP and 3-D Secure steps.
+
+When a session is in test mode, the checkout shows a **Test mode** badge and a collapsible test card panel.
 
 ## Security
 
@@ -86,5 +96,5 @@ The frame reports its height while the customer moves through checkout, so inlin
 - Only `/checkout/*` and `/embed/*` allow framing. The rest of Vine denies framing.
 
 <Card title="Open the demo" href="https://vine.ng/embed/demo.html">
-  Try the modal and inline embed with a checkout session.
+  The demo creates a test-mode checkout session automatically. Use a test card to complete it.
 </Card>
