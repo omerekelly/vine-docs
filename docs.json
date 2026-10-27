@@ -64,6 +64,14 @@
         ]
       },
       {
+        "group": "API reference",
+        "icon": "code",
+        "openapi": {
+          "source": "openapi.yaml",
+          "directory": "api-reference"
+        }
+      },
+      {
         "group": "Account",
         "icon": "shield-check",
         "pages": [

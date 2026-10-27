@@ -1,0 +1,524 @@
+openapi: 3.0.3
+info:
+  title: Vine API
+  version: 0.1.0
+  description: |-
+    The Vine developer API for collecting payments, creating checkout sessions, sending invoices and paying bills.
+
+    ## Authentication
+    Send `Authorization: Bearer <api key>` where `<api key>` is a live or test key from **Dashboard → Developers**.
+    Use `sk_live_…` for real money and `sk_test_…` while integrating.
+
+    API keys are scoped (`PAYMENT_LINKS`, `INVOICES`, `CHECKOUT`, `PRODUCTS`, `COURSES`, `BILLS`, `SIMS`) and mode-bound. `PAYMENTS` is the legacy broad payments scope. Only the endpoints in this reference are available to API keys.
+
+    ## Amounts
+    Monetary fields use **kobo** (100 kobo = ₦1). Example: ₦5,000 → `500000`.
+servers:
+  - url: https://api.vine.ng
+    description: Production
+tags:
+  - name: System
+    description: Health and status
+  - name: Bills
+    description: Bill categories, validation, and payments
+  - name: Payment Links
+    description: Shareable payment pages
+  - name: Invoices
+    description: Create, send, and collect on invoices
+  - name: Checkout
+    description: Hosted checkout sessions
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: sk_live_ / sk_test_ API key
+      description: API key from Dashboard → Developers.
+  schemas:
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+        code:
+          type: string
+      required:
+        - message
+    AmountKobo:
+      type: integer
+      description: 'Amount in kobo (100 kobo = ₦1). Example: ₦5,000 = 500000.'
+      example: 500000
+    PaymentMethod:
+      type: string
+      enum:
+        - bank_transfer
+        - card
+    ApiKeyScope:
+      type: string
+      enum:
+        - PAYMENTS
+        - PAYMENT_LINKS
+        - INVOICES
+        - PRODUCTS
+        - COURSES
+        - BILLS
+        - SIMS
+        - CHECKOUT
+    InvoiceLineItem:
+      type: object
+      required:
+        - description
+        - quantity
+        - unitPriceKobo
+      properties:
+        description:
+          type: string
+        quantity:
+          type: integer
+          minimum: 1
+        unitPriceKobo:
+          $ref: '#/components/schemas/AmountKobo'
+  responses:
+    Unauthorized:
+      description: Missing or invalid credentials
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: Insufficient scope or mode mismatch
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+paths:
+  /health:
+    get:
+      tags:
+        - System
+      summary: Health check
+      responses:
+        '200':
+          description: API status (ok or degraded)
+  /v1/bills/categories:
+    get:
+      tags:
+        - Bills
+      summary: List bill categories
+      responses:
+        '200':
+          description: Categories
+  /v1/bills/products:
+    get:
+      tags:
+        - Bills
+      summary: List bill products
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Products
+  /v1/bills/betting/providers:
+    get:
+      tags:
+        - Bills
+      summary: List betting providers
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Providers
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /v1/bills/verify:
+    post:
+      tags:
+        - Bills
+      summary: Verify bill customer reference
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - category
+                - productCode
+                - customerRef
+              properties:
+                category:
+                  type: string
+                productCode:
+                  type: string
+                customerRef:
+                  type: string
+      responses:
+        '200':
+          description: Verification result
+  /v1/bills/sync:
+    post:
+      tags:
+        - Bills
+      summary: Sync bill catalog from providers
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Catalog synced
+  /v1/bills/pay:
+    post:
+      tags:
+        - Bills
+      summary: Pay a bill
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - category
+                - productCode
+                - customerRef
+                - amountKobo
+                - pin
+              properties:
+                category:
+                  type: string
+                productCode:
+                  type: string
+                customerRef:
+                  type: string
+                amountKobo:
+                  $ref: '#/components/schemas/AmountKobo'
+                bundleCode:
+                  type: string
+                vendType:
+                  type: string
+                pin:
+                  type: string
+                  description: Transaction PIN (4-6 digits)
+      responses:
+        '200':
+          description: Bill paid
+  /v1/payment-links:
+    get:
+      tags:
+        - Payment Links
+      summary: List payment links
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Payment links
+    post:
+      tags:
+        - Payment Links
+      summary: Create payment link
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+              properties:
+                title:
+                  type: string
+                amountKobo:
+                  $ref: '#/components/schemas/AmountKobo'
+                allowCustomAmount:
+                  type: boolean
+                expiresAt:
+                  type: string
+                  format: date-time
+      responses:
+        '201':
+          description: Link created
+  /v1/payment-links/{id}:
+    get:
+      tags:
+        - Payment Links
+      summary: Get payment link
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Link detail
+    delete:
+      tags:
+        - Payment Links
+      summary: Deactivate payment link
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deactivated
+  /v1/payment-links/{id}/send:
+    post:
+      tags:
+        - Payment Links
+      summary: Email payment link to client
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - clientEmail
+              properties:
+                clientEmail:
+                  type: string
+                  format: email
+                clientName:
+                  type: string
+      responses:
+        '200':
+          description: Sent
+  /v1/invoices:
+    get:
+      tags:
+        - Invoices
+      summary: List invoices
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Invoices
+    post:
+      tags:
+        - Invoices
+      summary: Create invoice
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - clientName
+                - clientEmail
+                - lineItems
+              properties:
+                clientName:
+                  type: string
+                clientEmail:
+                  type: string
+                  format: email
+                clientPhone:
+                  type: string
+                clientAddress:
+                  type: string
+                dueDate:
+                  type: string
+                  format: date-time
+                notes:
+                  type: string
+                taxKobo:
+                  $ref: '#/components/schemas/AmountKobo'
+                lineItems:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/InvoiceLineItem'
+      responses:
+        '201':
+          description: Invoice created with pay URL
+  /v1/invoices/{id}:
+    get:
+      tags:
+        - Invoices
+      summary: Get invoice
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Invoice detail
+  /v1/invoices/{id}/download:
+    get:
+      tags:
+        - Invoices
+      summary: Download invoice PDF
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: PDF file
+          content:
+            application/pdf: {}
+  /v1/invoices/{id}/send:
+    post:
+      tags:
+        - Invoices
+      summary: Email invoice to client
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                clientEmail:
+                  type: string
+                  format: email
+                clientName:
+                  type: string
+      responses:
+        '200':
+          description: Sent
+  /v1/invoices/{id}/mark-paid:
+    post:
+      tags:
+        - Invoices
+      summary: Mark invoice paid manually
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                note:
+                  type: string
+      responses:
+        '200':
+          description: Marked paid
+  /v1/invoices/{id}/cancel:
+    post:
+      tags:
+        - Invoices
+      summary: Cancel invoice
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Cancelled
+  /v1/checkout/sessions:
+    post:
+      tags:
+        - Checkout
+      summary: Create hosted checkout session
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - amountKobo
+              properties:
+                amountKobo:
+                  $ref: '#/components/schemas/AmountKobo'
+                currency:
+                  type: string
+                  enum:
+                    - NGN
+                  default: NGN
+                customerEmail:
+                  type: string
+                  format: email
+                successUrl:
+                  type: string
+                  format: uri
+                cancelUrl:
+                  type: string
+                  format: uri
+                webhookUrl:
+                  type: string
+                  format: uri
+                metadata:
+                  type: object
+                  additionalProperties: true
+      responses:
+        '201':
+          description: Session with checkoutUrl
+  /v1/checkout/sessions/{id}:
+    get:
+      tags:
+        - Checkout
+      summary: Get checkout session
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Session detail
