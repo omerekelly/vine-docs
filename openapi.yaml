@@ -40,19 +40,69 @@ components:
       properties:
         message:
           type: string
+          description: Human readable error message.
         code:
           type: string
+          description: Stable machine readable error code.
       required:
         - message
+      example:
+        message: Payment link not found
+        code: NOT_FOUND
+    Mode:
+      type: string
+      enum:
+        - LIVE
+        - TEST
+      description: Key mode the request ran in.
+      example: TEST
+    Currency:
+      type: string
+      enum:
+        - NGN
+        - USD
+        - GHS
+        - KES
+        - XOF
+        - XAF
+        - UGX
+        - ZMW
+        - TZS
+        - RWF
+      example: NGN
     AmountKobo:
       type: integer
       description: 'Amount in kobo (100 kobo = ₦1). Example: ₦5,000 = 500000.'
       example: 500000
+    AmountKoboResponse:
+      type: string
+      description: Amount in kobo, returned as a string so large values keep full precision.
+      example: '2500000'
     PaymentMethod:
       type: string
       enum:
         - bank_transfer
         - card
+        - crypto
+      example: bank_transfer
+    PaymentStatus:
+      type: string
+      enum:
+        - PENDING
+        - SUCCESS
+        - FAILED
+        - EXPIRED
+        - CANCELLED
+      example: SUCCESS
+    InvoiceStatus:
+      type: string
+      enum:
+        - DRAFT
+        - SENT
+        - PAID
+        - OVERDUE
+        - CANCELLED
+      example: SENT
     ApiKeyScope:
       type: string
       enum:
@@ -64,6 +114,241 @@ components:
         - BILLS
         - SIMS
         - CHECKOUT
+    Health:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - ok
+            - degraded
+        service:
+          type: string
+          example: vine-api
+        build:
+          type: string
+          description: Deployed build revision.
+          example: '15'
+        brand:
+          type: string
+          example: Vine
+        tagline:
+          type: string
+          example: Financial Infrastructure for Africa
+        redis:
+          type: string
+          enum:
+            - connected
+            - disconnected
+        cache:
+          type: string
+          enum:
+            - enabled
+            - disabled
+        redisError:
+          type: string
+          description: Only present when Redis is unreachable.
+      required:
+        - status
+        - service
+        - build
+        - redis
+        - cache
+    BillCategory:
+      type: object
+      properties:
+        id:
+          type: string
+          example: bcat_airtime
+        slug:
+          type: string
+          enum:
+            - ELECTRICITY
+            - CABLE
+            - AIRTIME
+            - DATA
+            - UTILITY
+            - BETTING
+          example: AIRTIME
+        name:
+          type: string
+          example: Airtime
+        provider:
+          type: string
+          description: Bill provider key.
+        active:
+          type: boolean
+          example: true
+      required:
+        - id
+        - slug
+        - name
+        - active
+    BillProduct:
+      type: object
+      properties:
+        id:
+          type: string
+          example: bprod_mtn
+        categoryId:
+          type: string
+          example: bcat_airtime
+        externalCode:
+          type: string
+          description: Pass this as `productCode` when verifying or paying.
+          example: MTN
+        name:
+          type: string
+          example: MTN
+        minAmountKobo:
+          type: string
+          nullable: true
+          description: Minimum amount in kobo, or null when the product sets the amount.
+          example: '5000'
+        maxAmountKobo:
+          type: string
+          nullable: true
+          description: Maximum amount in kobo, or null when the product sets the amount.
+          example: '5000000'
+        active:
+          type: boolean
+          example: true
+        category:
+          $ref: '#/components/schemas/BillCategory'
+      required:
+        - id
+        - categoryId
+        - externalCode
+        - name
+        - active
+    BillPaymentResult:
+      type: object
+      properties:
+        paymentId:
+          type: string
+          example: bp_9f2c1a
+        status:
+          $ref: '#/components/schemas/PaymentStatus'
+        provider:
+          type: string
+          description: Bill provider key that settled the payment.
+        feeKobo:
+          type: string
+          description: Fee charged for the bill payment, in kobo.
+          example: '10000'
+        result:
+          type: object
+          additionalProperties: true
+          description: Provider response for the vend. Shape varies by bill category.
+      required:
+        - paymentId
+        - status
+        - feeKobo
+    PaymentLink:
+      type: object
+      properties:
+        id:
+          type: string
+          example: clx8p2v0k0000qz7h9m1s2abc
+        userId:
+          type: string
+          example: clx8p1r9x0000qz7h4b7t8xyz
+        mode:
+          $ref: '#/components/schemas/Mode'
+        slug:
+          type: string
+          example: a1b2c3d4e5f6
+        title:
+          type: string
+          example: Design retainer
+        amountKobo:
+          type: string
+          nullable: true
+          description: Fixed amount in kobo, or null when the payer chooses the amount.
+          example: '2500000'
+        allowCustomAmount:
+          type: boolean
+          example: false
+        currency:
+          $ref: '#/components/schemas/Currency'
+        paymentMethods:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaymentMethod'
+          example:
+            - bank_transfer
+            - card
+        active:
+          type: boolean
+          example: true
+        expiresAt:
+          type: string
+          format: date-time
+          nullable: true
+          example: null
+        createdAt:
+          type: string
+          format: date-time
+          example: '2026-05-01T09:00:00.000Z'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2026-05-01T09:00:00.000Z'
+        payUrl:
+          type: string
+          format: uri
+          description: Hosted payment page for this link. Share it with the payer.
+          example: https://vine.ng/pay/a1b2c3d4e5f6
+      required:
+        - id
+        - slug
+        - title
+        - allowCustomAmount
+        - currency
+        - active
+        - payUrl
+    PaymentLinkPayment:
+      type: object
+      properties:
+        id:
+          type: string
+          example: plp_7d3e9f
+        linkId:
+          type: string
+          example: clx8p2v0k0000qz7h9m1s2abc
+        amountKobo:
+          $ref: '#/components/schemas/AmountKoboResponse'
+        payerEmail:
+          type: string
+          format: email
+          nullable: true
+          example: null
+        method:
+          $ref: '#/components/schemas/PaymentMethod'
+        status:
+          $ref: '#/components/schemas/PaymentStatus'
+        provider:
+          type: string
+          nullable: true
+          description: Payment provider key.
+        providerRef:
+          type: string
+          nullable: true
+          example: nomba_9f2c1a
+        createdAt:
+          type: string
+          format: date-time
+          example: '2026-05-01T09:12:00.000Z'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2026-05-01T09:12:04.000Z'
+      required:
+        - id
+        - linkId
+        - amountKobo
+        - method
+        - status
     InvoiceLineItem:
       type: object
       required:
@@ -73,11 +358,230 @@ components:
       properties:
         description:
           type: string
+          example: Brand identity design
         quantity:
           type: integer
           minimum: 1
+          example: 1
         unitPriceKobo:
           $ref: '#/components/schemas/AmountKobo'
+    InvoiceLineItemResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: ili_4b1c8d
+        invoiceId:
+          type: string
+          example: inv_2c7f9a
+        description:
+          type: string
+          example: Brand identity design
+        quantity:
+          type: integer
+          example: 1
+        unitPriceKobo:
+          $ref: '#/components/schemas/AmountKoboResponse'
+        amountKobo:
+          type: string
+          description: quantity multiplied by unitPriceKobo, in kobo.
+          example: '2500000'
+        sortOrder:
+          type: integer
+          example: 0
+      required:
+        - id
+        - description
+        - quantity
+        - unitPriceKobo
+        - amountKobo
+    InvoicePayment:
+      type: object
+      properties:
+        id:
+          type: string
+          example: inp_5e2a7c
+        invoiceId:
+          type: string
+          example: inv_2c7f9a
+        amountKobo:
+          $ref: '#/components/schemas/AmountKoboResponse'
+        payerEmail:
+          type: string
+          format: email
+          nullable: true
+          example: null
+        method:
+          $ref: '#/components/schemas/PaymentMethod'
+        status:
+          $ref: '#/components/schemas/PaymentStatus'
+        provider:
+          type: string
+          nullable: true
+          description: Payment provider key.
+        providerRef:
+          type: string
+          nullable: true
+          example: nomba_5e2a7c
+        createdAt:
+          type: string
+          format: date-time
+          example: '2026-05-02T11:04:00.000Z'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2026-05-02T11:04:05.000Z'
+      required:
+        - id
+        - invoiceId
+        - amountKobo
+        - method
+        - status
+    Invoice:
+      type: object
+      properties:
+        id:
+          type: string
+          example: inv_2c7f9a
+        userId:
+          type: string
+          example: clx8p1r9x0000qz7h4b7t8xyz
+        mode:
+          $ref: '#/components/schemas/Mode'
+        invoiceNumber:
+          type: string
+          example: INV-2026-0001
+        slug:
+          type: string
+          example: k3m9q2x7p1
+        status:
+          $ref: '#/components/schemas/InvoiceStatus'
+        clientName:
+          type: string
+          example: Ada Okafor
+        clientEmail:
+          type: string
+          format: email
+          example: ada@example.com
+        clientPhone:
+          type: string
+          nullable: true
+          example: '+2348012345678'
+        clientAddress:
+          type: string
+          nullable: true
+          example: 12 Marina, Lagos
+        currency:
+          $ref: '#/components/schemas/Currency'
+        subtotalKobo:
+          $ref: '#/components/schemas/AmountKoboResponse'
+        taxKobo:
+          type: string
+          description: Tax in kobo.
+          example: '187500'
+        totalKobo:
+          type: string
+          description: subtotalKobo plus taxKobo, in kobo.
+          example: '2687500'
+        notes:
+          type: string
+          nullable: true
+          example: Payable within 14 days.
+        dueDate:
+          type: string
+          format: date-time
+          nullable: true
+          example: '2026-05-15T00:00:00.000Z'
+        paymentMethods:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaymentMethod'
+          example:
+            - bank_transfer
+            - card
+        sentAt:
+          type: string
+          format: date-time
+          nullable: true
+          example: '2026-05-01T10:15:00.000Z'
+        paidAt:
+          type: string
+          format: date-time
+          nullable: true
+          example: null
+        createdAt:
+          type: string
+          format: date-time
+          example: '2026-05-01T10:00:00.000Z'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2026-05-01T10:15:00.000Z'
+        lineItems:
+          type: array
+          items:
+            $ref: '#/components/schemas/InvoiceLineItemResponse'
+        payments:
+          type: array
+          items:
+            $ref: '#/components/schemas/InvoicePayment'
+        payUrl:
+          type: string
+          format: uri
+          description: Hosted invoice page. Share it with the client.
+          example: https://vine.ng/invoice/k3m9q2x7p1
+      required:
+        - id
+        - invoiceNumber
+        - status
+        - clientName
+        - clientEmail
+        - subtotalKobo
+        - taxKobo
+        - totalKobo
+        - lineItems
+        - payUrl
+    CheckoutSession:
+      type: object
+      properties:
+        id:
+          type: string
+          example: cs_9m4x2k
+        amountKobo:
+          $ref: '#/components/schemas/AmountKoboResponse'
+        currency:
+          $ref: '#/components/schemas/Currency'
+        status:
+          $ref: '#/components/schemas/PaymentStatus'
+        mode:
+          $ref: '#/components/schemas/Mode'
+        type:
+          type: string
+          enum:
+            - MERCHANT
+            - SUBSCRIPTION
+            - PAYMENT_LINK
+            - DEPOSIT
+            - COURSE
+          example: MERCHANT
+        checkoutUrl:
+          type: string
+          format: uri
+          description: Redirect the customer here to pay.
+          example: https://vine.ng/checkout/cs_9m4x2k
+        expiresAt:
+          type: string
+          format: date-time
+          nullable: true
+          example: '2026-05-01T11:30:00.000Z'
+      required:
+        - id
+        - amountKobo
+        - currency
+        - status
+        - mode
+        - type
+        - checkoutUrl
   responses:
     Unauthorized:
       description: Missing or invalid credentials
@@ -85,58 +589,180 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
+          example:
+            message: Missing or invalid API key
+            code: UNAUTHORIZED
     Forbidden:
       description: Insufficient scope or mode mismatch
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
+          example:
+            message: API key is missing the INVOICES scope
+            code: FORBIDDEN
     NotFound:
       description: Resource not found
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
+          example:
+            message: Payment link not found
+            code: NOT_FOUND
 paths:
   /health:
     get:
       tags:
         - System
       summary: Health check
+      description: Liveness probe. Always responds 200, even when the cache is unreachable.
       responses:
         '200':
-          description: API status (ok or degraded)
+          description: API status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+              example:
+                status: ok
+                service: vine-api
+                build: '15'
+                brand: Vine
+                tagline: Financial Infrastructure for Africa
+                redis: connected
+                cache: enabled
   /v1/bills/categories:
     get:
       tags:
         - Bills
       summary: List bill categories
+      description: Every bill category you can sell through the Bills API.
       responses:
         '200':
-          description: Categories
+          description: Bill categories
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - categories
+                properties:
+                  categories:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BillCategory'
+              example:
+                categories:
+                  - id: bcat_airtime
+                    slug: AIRTIME
+                    name: Airtime
+                    active: true
+                  - id: bcat_data
+                    slug: DATA
+                    name: Data
+                    active: true
+                  - id: bcat_electricity
+                    slug: ELECTRICITY
+                    name: Electricity
+                    active: true
+                  - id: bcat_cable
+                    slug: CABLE
+                    name: Cable TV
+                    active: true
+                  - id: bcat_betting
+                    slug: BETTING
+                    name: Betting
+                    active: true
   /v1/bills/products:
     get:
       tags:
         - Bills
       summary: List bill products
+      description: Products for one category, or the whole catalog when `category` is omitted.
       parameters:
         - name: category
           in: query
+          required: false
+          description: Category slug, for example `AIRTIME`.
           schema:
             type: string
+            enum:
+              - ELECTRICITY
+              - CABLE
+              - AIRTIME
+              - DATA
+              - UTILITY
+              - BETTING
       responses:
         '200':
-          description: Products
+          description: Bill products
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - products
+                properties:
+                  products:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BillProduct'
+              example:
+                products:
+                  - id: bprod_mtn
+                    categoryId: bcat_airtime
+                    externalCode: MTN
+                    name: MTN
+                    minAmountKobo: '5000'
+                    maxAmountKobo: '5000000'
+                    active: true
+                    category:
+                      id: bcat_airtime
+                      slug: AIRTIME
+                      name: Airtime
+                      active: true
+                  - id: bprod_mtn_1gb
+                    categoryId: bcat_data
+                    externalCode: svc_data|MTN-1GB-30D
+                    name: MTN 1GB · 30 days
+                    minAmountKobo: '50000'
+                    maxAmountKobo: '50000'
+                    active: true
+                    category:
+                      id: bcat_data
+                      slug: DATA
+                      name: Data
+                      active: true
   /v1/bills/betting/providers:
     get:
       tags:
         - Bills
       summary: List betting providers
+      description: Providers available for betting wallet top ups.
       security:
         - bearerAuth: []
       responses:
         '200':
-          description: Providers
+          description: Betting providers
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      additionalProperties: true
+                  message:
+                    type: string
+              example:
+                data:
+                  - id: bet9ja
+                    name: Bet9ja
+                  - id: sportybet
+                    name: SportyBet
         '403':
           $ref: '#/components/responses/Forbidden'
   /v1/bills/verify:
@@ -144,6 +770,7 @@ paths:
       tags:
         - Bills
       summary: Verify bill customer reference
+      description: Confirms a customer, meter or betting account before you charge. Supported for electricity, cable, utility and betting.
       security:
         - bearerAuth: []
       requestBody:
@@ -159,28 +786,83 @@ paths:
               properties:
                 category:
                   type: string
+                  enum:
+                    - ELECTRICITY
+                    - CABLE
+                    - UTILITY
+                    - BETTING
+                  example: ELECTRICITY
                 productCode:
                   type: string
+                  description: Product code from the catalog.
+                  example: IKEDC
                 customerRef:
                   type: string
+                  description: Meter number, smartcard number or customer reference.
+                  example: '04123456789'
+            example:
+              category: ELECTRICITY
+              productCode: IKEDC
+              customerRef: '04123456789'
       responses:
         '200':
           description: Verification result
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - result
+                properties:
+                  result:
+                    type: object
+                    additionalProperties: true
+                    description: Resolved customer details. Shape depends on the bill category.
+              example:
+                result:
+                  customerName: ADA OKAFOR
+                  customerAddress: 12 MARINA, LAGOS
+                  customerRef: '04123456789'
+        '400':
+          description: Unsupported category for verification
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: Verify is only supported for electricity, cable, utility, and betting
+                code: BAD_REQUEST
   /v1/bills/sync:
     post:
       tags:
         - Bills
       summary: Sync bill catalog from providers
+      description: Refreshes the catalog from the bill provider. Safe to call on a schedule.
       security:
         - bearerAuth: []
       responses:
         '200':
           description: Catalog synced
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - synced
+                properties:
+                  synced:
+                    type: integer
+                    description: Number of products written.
+              example:
+                synced: 128
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /v1/bills/pay:
     post:
       tags:
         - Bills
       summary: Pay a bill
+      description: Debits your wallet and vends the bill. Requires your 4 to 6 digit transaction PIN. Test mode returns a sandbox result without vending.
       security:
         - bearerAuth: []
       requestBody:
@@ -198,36 +880,116 @@ paths:
               properties:
                 category:
                   type: string
+                  enum:
+                    - ELECTRICITY
+                    - CABLE
+                    - AIRTIME
+                    - DATA
+                    - UTILITY
+                    - BETTING
+                  example: AIRTIME
                 productCode:
                   type: string
+                  example: MTN
                 customerRef:
                   type: string
+                  example: '08012345678'
                 amountKobo:
                   $ref: '#/components/schemas/AmountKobo'
                 bundleCode:
                   type: string
+                  example: MTN-1GB-30D
                 vendType:
                   type: string
+                  example: PREPAID
                 pin:
                   type: string
-                  description: Transaction PIN (4-6 digits)
+                  description: Transaction PIN (4-6 digits).
+                  example: '1234'
+            example:
+              category: AIRTIME
+              productCode: MTN
+              customerRef: '08012345678'
+              amountKobo: 100000
+              pin: '1234'
       responses:
         '200':
           description: Bill paid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillPaymentResult'
+              example:
+                paymentId: bp_9f2c1a
+                status: SUCCESS
+                feeKobo: '10000'
+                result:
+                  reference: VAS-8f21c
+                  delivered: true
+        '400':
+          description: Invalid product or amount
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: bundleCode required for data (use productCode as serviceCategoryId|bundleCode)
+                code: BUNDLE_CODE_REQUIRED
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /v1/payment-links:
     get:
       tags:
         - Payment Links
       summary: List payment links
+      description: Every payment link in the key's mode, newest first.
       security:
         - bearerAuth: []
       responses:
         '200':
           description: Payment links
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - links
+                  - mode
+                properties:
+                  links:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PaymentLink'
+                  mode:
+                    $ref: '#/components/schemas/Mode'
+              example:
+                links:
+                  - id: clx8p2v0k0000qz7h9m1s2abc
+                    userId: clx8p1r9x0000qz7h4b7t8xyz
+                    mode: TEST
+                    slug: a1b2c3d4e5f6
+                    title: Design retainer
+                    amountKobo: '2500000'
+                    allowCustomAmount: false
+                    currency: NGN
+                    paymentMethods:
+                      - bank_transfer
+                      - card
+                    active: true
+                    expiresAt: null
+                    createdAt: '2026-05-01T09:00:00.000Z'
+                    updatedAt: '2026-05-01T09:00:00.000Z'
+                    payUrl: https://vine.ng/pay/a1b2c3d4e5f6
+                mode: TEST
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
     post:
       tags:
         - Payment Links
       summary: Create payment link
+      description: Creates a shareable payment page. Send either a fixed `amountKobo` or set `allowCustomAmount` so the payer chooses.
       security:
         - bearerAuth: []
       requestBody:
@@ -241,47 +1003,181 @@ paths:
               properties:
                 title:
                   type: string
+                  maxLength: 200
+                  description: Shown on the payment page.
+                  example: Design retainer
                 amountKobo:
-                  $ref: '#/components/schemas/AmountKobo'
+                  allOf:
+                    - $ref: '#/components/schemas/AmountKobo'
+                  description: Fixed amount in kobo. Required unless `allowCustomAmount` is true.
                 allowCustomAmount:
                   type: boolean
+                  example: false
+                paymentMethods:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/PaymentMethod'
+                  minItems: 1
+                  maxItems: 3
+                  description: Defaults to the methods enabled on your account.
+                  example:
+                    - bank_transfer
+                    - card
                 expiresAt:
                   type: string
                   format: date-time
+                  description: When the link stops accepting payments.
+                  example: '2026-06-01T00:00:00.000Z'
+            example:
+              title: Design retainer
+              amountKobo: 2500000
+              paymentMethods:
+                - bank_transfer
+                - card
       responses:
         '201':
           description: Link created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - link
+                  - mode
+                properties:
+                  link:
+                    $ref: '#/components/schemas/PaymentLink'
+                  mode:
+                    $ref: '#/components/schemas/Mode'
+              example:
+                link:
+                  id: clx8p2v0k0000qz7h9m1s2abc
+                  userId: clx8p1r9x0000qz7h4b7t8xyz
+                  mode: TEST
+                  slug: a1b2c3d4e5f6
+                  title: Design retainer
+                  amountKobo: '2500000'
+                  allowCustomAmount: false
+                  currency: NGN
+                  paymentMethods:
+                    - bank_transfer
+                    - card
+                  active: true
+                  expiresAt: null
+                  createdAt: '2026-05-01T09:00:00.000Z'
+                  updatedAt: '2026-05-01T09:00:00.000Z'
+                  payUrl: https://vine.ng/pay/a1b2c3d4e5f6
+                mode: TEST
+        '400':
+          description: Missing amount or custom amount flag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: Provide amountKobo or set allowCustomAmount
+                code: BAD_REQUEST
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /v1/payment-links/{id}:
     get:
       tags:
         - Payment Links
       summary: Get payment link
+      description: Returns the link plus every payment attempt against it.
       security:
         - bearerAuth: []
       parameters:
         - name: id
           in: path
           required: true
+          description: Payment link id.
           schema:
             type: string
       responses:
         '200':
           description: Link detail
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - link
+                properties:
+                  link:
+                    allOf:
+                      - $ref: '#/components/schemas/PaymentLink'
+                      - type: object
+                        properties:
+                          payments:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/PaymentLinkPayment'
+              example:
+                link:
+                  id: clx8p2v0k0000qz7h9m1s2abc
+                  userId: clx8p1r9x0000qz7h4b7t8xyz
+                  mode: TEST
+                  slug: a1b2c3d4e5f6
+                  title: Design retainer
+                  amountKobo: '2500000'
+                  allowCustomAmount: false
+                  currency: NGN
+                  paymentMethods:
+                    - bank_transfer
+                    - card
+                  active: true
+                  expiresAt: null
+                  createdAt: '2026-05-01T09:00:00.000Z'
+                  updatedAt: '2026-05-01T09:00:00.000Z'
+                  payUrl: https://vine.ng/pay/a1b2c3d4e5f6
+                  payments:
+                    - id: plp_7d3e9f
+                      linkId: clx8p2v0k0000qz7h9m1s2abc
+                      amountKobo: '2500000'
+                      payerEmail: ada@example.com
+                      method: bank_transfer
+                      status: SUCCESS
+                      providerRef: nomba_9f2c1a
+                      createdAt: '2026-05-01T09:12:00.000Z'
+                      updatedAt: '2026-05-01T09:12:04.000Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
     delete:
       tags:
         - Payment Links
       summary: Deactivate payment link
+      description: Stops the link accepting new payments. Existing payments are untouched.
       security:
         - bearerAuth: []
       parameters:
         - name: id
           in: path
           required: true
+          description: Payment link id.
           schema:
             type: string
       responses:
         '200':
           description: Deactivated
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - deactivated
+                properties:
+                  deactivated:
+                    type: boolean
+                    description: False when the link was already inactive or not found.
+              example:
+                deactivated: true
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /v1/payment-links/{id}/send:
     post:
       tags:
@@ -293,6 +1189,7 @@ paths:
         - name: id
           in: path
           required: true
+          description: Payment link id.
           schema:
             type: string
       requestBody:
@@ -307,25 +1204,127 @@ paths:
                 clientEmail:
                   type: string
                   format: email
+                  example: ada@example.com
                 clientName:
                   type: string
+                  example: Ada
+            example:
+              clientEmail: ada@example.com
+              clientName: Ada
       responses:
         '200':
           description: Sent
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - sent
+                  - to
+                  - payUrl
+                properties:
+                  sent:
+                    type: boolean
+                  to:
+                    type: string
+                    format: email
+                  payUrl:
+                    type: string
+                    format: uri
+              example:
+                sent: true
+                to: ada@example.com
+                payUrl: https://vine.ng/pay/a1b2c3d4e5f6
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Link is inactive
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: Payment link is inactive
+                code: LINK_INACTIVE
+        '410':
+          description: Link has expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: Payment link expired
+                code: LINK_EXPIRED
   /v1/invoices:
     get:
       tags:
         - Invoices
       summary: List invoices
+      description: Every invoice in the key's mode, newest first.
       security:
         - bearerAuth: []
       responses:
         '200':
           description: Invoices
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - invoices
+                  - mode
+                properties:
+                  invoices:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Invoice'
+                  mode:
+                    $ref: '#/components/schemas/Mode'
+              example:
+                invoices:
+                  - id: inv_2c7f9a
+                    userId: clx8p1r9x0000qz7h4b7t8xyz
+                    mode: TEST
+                    invoiceNumber: INV-2026-0001
+                    slug: k3m9q2x7p1
+                    status: SENT
+                    clientName: Ada Okafor
+                    clientEmail: ada@example.com
+                    clientPhone: '+2348012345678'
+                    clientAddress: 12 Marina, Lagos
+                    currency: NGN
+                    subtotalKobo: '2500000'
+                    taxKobo: '187500'
+                    totalKobo: '2687500'
+                    notes: Payable within 14 days.
+                    dueDate: '2026-05-15T00:00:00.000Z'
+                    paymentMethods:
+                      - bank_transfer
+                      - card
+                    sentAt: '2026-05-01T10:15:00.000Z'
+                    paidAt: null
+                    createdAt: '2026-05-01T10:00:00.000Z'
+                    updatedAt: '2026-05-01T10:15:00.000Z'
+                    lineItems:
+                      - id: ili_4b1c8d
+                        invoiceId: inv_2c7f9a
+                        description: Brand identity design
+                        quantity: 1
+                        unitPriceKobo: '2500000'
+                        amountKobo: '2500000'
+                        sortOrder: 0
+                    payments: []
+                    payUrl: https://vine.ng/invoice/k3m9q2x7p1
+                mode: TEST
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
     post:
       tags:
         - Invoices
       summary: Create invoice
+      description: Creates a draft invoice with a hosted pay page. Send it to the client with `POST /v1/invoices/{id}/send`.
       security:
         - bearerAuth: []
       requestBody:
@@ -341,72 +1340,239 @@ paths:
               properties:
                 clientName:
                   type: string
+                  maxLength: 200
+                  example: Ada Okafor
                 clientEmail:
                   type: string
                   format: email
+                  maxLength: 255
+                  example: ada@example.com
                 clientPhone:
                   type: string
+                  example: '+2348012345678'
                 clientAddress:
                   type: string
+                  maxLength: 500
+                  example: 12 Marina, Lagos
                 dueDate:
                   type: string
                   format: date-time
+                  example: '2026-05-15T00:00:00.000Z'
                 notes:
                   type: string
+                  maxLength: 2000
+                  example: Payable within 14 days.
                 taxKobo:
-                  $ref: '#/components/schemas/AmountKobo'
-                lineItems:
+                  allOf:
+                    - $ref: '#/components/schemas/AmountKobo'
+                  description: Absolute tax for the invoice, in kobo.
+                paymentMethods:
                   type: array
                   items:
+                    $ref: '#/components/schemas/PaymentMethod'
+                  minItems: 1
+                  maxItems: 3
+                  description: Defaults to the methods enabled on your account.
+                  example:
+                    - bank_transfer
+                    - card
+                lineItems:
+                  type: array
+                  minItems: 1
+                  maxItems: 50
+                  items:
                     $ref: '#/components/schemas/InvoiceLineItem'
+            example:
+              clientName: Ada Okafor
+              clientEmail: ada@example.com
+              clientPhone: '+2348012345678'
+              clientAddress: 12 Marina, Lagos
+              dueDate: '2026-05-15T00:00:00.000Z'
+              notes: Payable within 14 days.
+              taxKobo: 187500
+              paymentMethods:
+                - bank_transfer
+                - card
+              lineItems:
+                - description: Brand identity design
+                  quantity: 1
+                  unitPriceKobo: 2500000
       responses:
         '201':
           description: Invoice created with pay URL
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - invoice
+                  - mode
+                properties:
+                  invoice:
+                    $ref: '#/components/schemas/Invoice'
+                  mode:
+                    $ref: '#/components/schemas/Mode'
+              example:
+                invoice:
+                  id: inv_2c7f9a
+                  userId: clx8p1r9x0000qz7h4b7t8xyz
+                  mode: TEST
+                  invoiceNumber: INV-2026-0001
+                  slug: k3m9q2x7p1
+                  status: DRAFT
+                  clientName: Ada Okafor
+                  clientEmail: ada@example.com
+                  clientPhone: '+2348012345678'
+                  clientAddress: 12 Marina, Lagos
+                  currency: NGN
+                  subtotalKobo: '2500000'
+                  taxKobo: '187500'
+                  totalKobo: '2687500'
+                  notes: Payable within 14 days.
+                  dueDate: '2026-05-15T00:00:00.000Z'
+                  paymentMethods:
+                    - bank_transfer
+                    - card
+                  sentAt: null
+                  paidAt: null
+                  createdAt: '2026-05-01T10:00:00.000Z'
+                  updatedAt: '2026-05-01T10:00:00.000Z'
+                  lineItems:
+                    - id: ili_4b1c8d
+                      invoiceId: inv_2c7f9a
+                      description: Brand identity design
+                      quantity: 1
+                      unitPriceKobo: '2500000'
+                      amountKobo: '2500000'
+                      sortOrder: 0
+                  payments: []
+                  payUrl: https://vine.ng/invoice/k3m9q2x7p1
+                mode: TEST
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /v1/invoices/{id}:
     get:
       tags:
         - Invoices
       summary: Get invoice
+      description: Returns the invoice with its line items and payment attempts.
       security:
         - bearerAuth: []
       parameters:
         - name: id
           in: path
           required: true
+          description: Invoice id.
           schema:
             type: string
       responses:
         '200':
           description: Invoice detail
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - invoice
+                properties:
+                  invoice:
+                    $ref: '#/components/schemas/Invoice'
+              example:
+                invoice:
+                  id: inv_2c7f9a
+                  userId: clx8p1r9x0000qz7h4b7t8xyz
+                  mode: TEST
+                  invoiceNumber: INV-2026-0001
+                  slug: k3m9q2x7p1
+                  status: PAID
+                  clientName: Ada Okafor
+                  clientEmail: ada@example.com
+                  clientPhone: '+2348012345678'
+                  clientAddress: 12 Marina, Lagos
+                  currency: NGN
+                  subtotalKobo: '2500000'
+                  taxKobo: '187500'
+                  totalKobo: '2687500'
+                  notes: Payable within 14 days.
+                  dueDate: '2026-05-15T00:00:00.000Z'
+                  paymentMethods:
+                    - bank_transfer
+                    - card
+                  sentAt: '2026-05-01T10:15:00.000Z'
+                  paidAt: '2026-05-02T11:04:05.000Z'
+                  createdAt: '2026-05-01T10:00:00.000Z'
+                  updatedAt: '2026-05-02T11:04:05.000Z'
+                  lineItems:
+                    - id: ili_4b1c8d
+                      invoiceId: inv_2c7f9a
+                      description: Brand identity design
+                      quantity: 1
+                      unitPriceKobo: '2500000'
+                      amountKobo: '2500000'
+                      sortOrder: 0
+                  payments:
+                    - id: inp_5e2a7c
+                      invoiceId: inv_2c7f9a
+                      amountKobo: '2687500'
+                      payerEmail: ada@example.com
+                      method: card
+                      status: SUCCESS
+                      providerRef: nomba_5e2a7c
+                      createdAt: '2026-05-02T11:04:00.000Z'
+                      updatedAt: '2026-05-02T11:04:05.000Z'
+                  payUrl: https://vine.ng/invoice/k3m9q2x7p1
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /v1/invoices/{id}/download:
     get:
       tags:
         - Invoices
       summary: Download invoice PDF
+      description: Returns the rendered invoice as a PDF attachment.
       security:
         - bearerAuth: []
       parameters:
         - name: id
           in: path
           required: true
+          description: Invoice id.
           schema:
             type: string
       responses:
         '200':
           description: PDF file
+          headers:
+            Content-Disposition:
+              description: Attachment with the invoice filename.
+              schema:
+                type: string
+                example: attachment; filename="INV-2026-0001.pdf"
           content:
-            application/pdf: {}
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /v1/invoices/{id}/send:
     post:
       tags:
         - Invoices
       summary: Email invoice to client
+      description: Marks the invoice as sent and emails the pay page. Omit the body to use the client details on the invoice.
       security:
         - bearerAuth: []
       parameters:
         - name: id
           in: path
           required: true
+          description: Invoice id.
           schema:
             type: string
       requestBody:
@@ -419,22 +1585,65 @@ paths:
                 clientEmail:
                   type: string
                   format: email
+                  example: ada@example.com
                 clientName:
                   type: string
+                  example: Ada
+            example:
+              clientEmail: ada@example.com
+              clientName: Ada
       responses:
         '200':
           description: Sent
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - sent
+                  - to
+                  - payUrl
+                  - status
+                properties:
+                  sent:
+                    type: boolean
+                  to:
+                    type: string
+                    format: email
+                  payUrl:
+                    type: string
+                    format: uri
+                  status:
+                    $ref: '#/components/schemas/InvoiceStatus'
+              example:
+                sent: true
+                to: ada@example.com
+                payUrl: https://vine.ng/invoice/k3m9q2x7p1
+                status: SENT
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Invoice already paid or cancelled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: Invoice already paid
+                code: INVOICE_PAID
   /v1/invoices/{id}/mark-paid:
     post:
       tags:
         - Invoices
       summary: Mark invoice paid manually
+      description: Records an off-platform payment and settles the invoice. Use this for cash or bank transfers you reconciled yourself.
       security:
         - bearerAuth: []
       parameters:
         - name: id
           in: path
           required: true
+          description: Invoice id.
           schema:
             type: string
       requestBody:
@@ -446,30 +1655,94 @@ paths:
               properties:
                 note:
                   type: string
+                  maxLength: 500
+                  description: Internal note about how the invoice was settled.
+                  example: Bank transfer confirmed on 2 May
+            example:
+              note: Bank transfer confirmed on 2 May
       responses:
         '200':
           description: Marked paid
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - paid
+                  - invoiceId
+                  - paymentId
+                  - status
+                properties:
+                  paid:
+                    type: boolean
+                  invoiceId:
+                    type: string
+                  paymentId:
+                    type: string
+                  status:
+                    $ref: '#/components/schemas/InvoiceStatus'
+              example:
+                paid: true
+                invoiceId: inv_2c7f9a
+                paymentId: inp_5e2a7c
+                status: PAID
+        '400':
+          description: Invoice cannot be marked paid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: Invoice cannot be marked as paid
+                code: INVOICE_NOT_PAYABLE
+        '404':
+          $ref: '#/components/responses/NotFound'
   /v1/invoices/{id}/cancel:
     post:
       tags:
         - Invoices
       summary: Cancel invoice
+      description: Cancels an unpaid invoice. The pay page stops accepting payments.
       security:
         - bearerAuth: []
       parameters:
         - name: id
           in: path
           required: true
+          description: Invoice id.
           schema:
             type: string
       responses:
         '200':
           description: Cancelled
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - cancelled
+                properties:
+                  cancelled:
+                    type: boolean
+              example:
+                cancelled: true
+        '400':
+          description: Invoice cannot be cancelled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: Invoice cannot be cancelled
+                code: BAD_REQUEST
+        '404':
+          $ref: '#/components/responses/NotFound'
   /v1/checkout/sessions:
     post:
       tags:
         - Checkout
       summary: Create hosted checkout session
+      description: Creates a session and returns a `checkoutUrl`. Redirect the customer there to pay.
       security:
         - bearerAuth: []
       requestBody:
@@ -484,41 +1757,134 @@ paths:
                 amountKobo:
                   $ref: '#/components/schemas/AmountKobo'
                 currency:
-                  type: string
-                  enum:
-                    - NGN
+                  allOf:
+                    - $ref: '#/components/schemas/Currency'
                   default: NGN
+                  description: Defaults to NGN. Non NGN sessions only support card and crypto.
                 customerEmail:
                   type: string
                   format: email
+                  description: Used for the receipt.
+                  example: customer@example.com
+                paymentMethods:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/PaymentMethod'
+                  minItems: 1
+                  maxItems: 3
+                  description: Defaults to the methods enabled on your account.
+                  example:
+                    - bank_transfer
+                    - card
                 successUrl:
                   type: string
                   format: uri
+                  example: https://example.com/thanks
                 cancelUrl:
                   type: string
                   format: uri
+                  example: https://example.com/cancelled
                 webhookUrl:
                   type: string
                   format: uri
+                  description: Per session webhook override.
+                  example: https://example.com/webhooks/vine
                 metadata:
                   type: object
                   additionalProperties: true
+                  description: Your own data, stored with the session.
+                  example:
+                    orderId: ord_123
+            example:
+              amountKobo: 500000
+              customerEmail: customer@example.com
+              paymentMethods:
+                - bank_transfer
+                - card
+              successUrl: https://example.com/thanks
+              metadata:
+                orderId: ord_123
       responses:
         '201':
           description: Session with checkoutUrl
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - session
+                  - mode
+                properties:
+                  session:
+                    $ref: '#/components/schemas/CheckoutSession'
+                  mode:
+                    $ref: '#/components/schemas/Mode'
+              example:
+                session:
+                  id: cs_9m4x2k
+                  amountKobo: '500000'
+                  currency: NGN
+                  status: PENDING
+                  mode: TEST
+                  type: MERCHANT
+                  checkoutUrl: https://vine.ng/checkout/cs_9m4x2k
+                  expiresAt: '2026-05-01T11:30:00.000Z'
+                mode: TEST
+        '400':
+          description: No payment method available for the currency
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: Choose card or crypto for international checkout
+                code: NO_AVAILABLE_PAYMENT_METHODS
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /v1/checkout/sessions/{id}:
     get:
       tags:
         - Checkout
       summary: Get checkout session
+      description: Returns the session and its current payment status.
       security:
         - bearerAuth: []
       parameters:
         - name: id
           in: path
           required: true
+          description: Checkout session id.
           schema:
             type: string
       responses:
         '200':
           description: Session detail
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - session
+                  - mode
+                properties:
+                  session:
+                    $ref: '#/components/schemas/CheckoutSession'
+                  mode:
+                    $ref: '#/components/schemas/Mode'
+              example:
+                session:
+                  id: cs_9m4x2k
+                  amountKobo: '500000'
+                  currency: NGN
+                  status: SUCCESS
+                  mode: TEST
+                  type: MERCHANT
+                  checkoutUrl: https://vine.ng/checkout/cs_9m4x2k
+                  expiresAt: '2026-05-01T11:30:00.000Z'
+                mode: TEST
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
