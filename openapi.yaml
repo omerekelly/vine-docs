@@ -670,7 +670,7 @@ components:
           type: string
           format: uri
           description: Redirect the customer here to pay.
-          example: https://vine.ng/checkout/cs_9m4x2k
+          example: https://checkout.vine.ng/checkout/cs_9m4x2k
         expiresAt:
           type: string
           format: date-time
@@ -2253,7 +2253,7 @@ paths:
                   status: PENDING
                   mode: TEST
                   type: MERCHANT
-                  checkoutUrl: https://vine.ng/checkout/cs_9m4x2k
+                  checkoutUrl: https://checkout.vine.ng/checkout/cs_9m4x2k
                   expiresAt: '2026-05-01T11:30:00.000Z'
                 mode: TEST
         '400':
@@ -2307,7 +2307,7 @@ paths:
                   status: SUCCESS
                   mode: TEST
                   type: MERCHANT
-                  checkoutUrl: https://vine.ng/checkout/cs_9m4x2k
+                  checkoutUrl: https://checkout.vine.ng/checkout/cs_9m4x2k
                   expiresAt: '2026-05-01T11:30:00.000Z'
                 mode: TEST
         '401':
