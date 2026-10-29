@@ -568,9 +568,6 @@ components:
           type: string
           description: Masked BVN, NIN or company number.
           example: 221*****89
-        provider:
-          type: string
-          example: prembly
         responseCode:
           type: string
           nullable: true
@@ -602,7 +599,6 @@ components:
         - type
         - status
         - reference
-        - provider
         - feeKobo
         - mode
         - createdAt
@@ -1070,12 +1066,12 @@ paths:
                   - type: NIN
                     label: NIN verification
                     productType: kyc_nin
-                    feeKobo: '10000'
+                    feeKobo: '15000'
                     active: true
                   - type: CAC
                     label: CAC company search
                     productType: kyc_cac
-                    feeKobo: '50000'
+                    feeKobo: '100000'
                     active: true
         '401':
           $ref: '#/components/responses/Unauthorized'
@@ -1086,7 +1082,7 @@ paths:
       tags:
         - Verifications
       summary: Verify BVN
-      description: Checks an 11 digit BVN with Prembly and debits the fee from your deposit wallet. Test keys return a sandbox result.
+      description: Checks an 11 digit BVN and debits the fee from your deposit wallet. Test keys return a sandbox result.
       security:
         - bearerAuth: []
       requestBody:
@@ -1123,7 +1119,6 @@ paths:
                   type: BVN
                   status: VERIFIED
                   reference: 221*****89
-                  provider: prembly
                   responseCode: '00'
                   detail: Verification successful
                   feeKobo: '10000'
@@ -1159,7 +1154,7 @@ paths:
       tags:
         - Verifications
       summary: Verify NIN
-      description: Checks an 11 digit NIN with Prembly and debits the fee from your deposit wallet. Test keys return a sandbox result.
+      description: Checks an 11 digit NIN and debits the fee from your deposit wallet. Test keys return a sandbox result.
       security:
         - bearerAuth: []
       requestBody:
@@ -1196,10 +1191,9 @@ paths:
                   type: NIN
                   status: VERIFIED
                   reference: 123*****01
-                  provider: prembly
                   responseCode: '00'
                   detail: Verification successful
-                  feeKobo: '10000'
+                  feeKobo: '15000'
                   mode: TEST
                   sandbox: false
                   data:
@@ -1232,7 +1226,7 @@ paths:
       tags:
         - Verifications
       summary: Verify CAC company
-      description: Looks up a company by RC, BN or IT number with Prembly. Set advance to false for a basic lookup. Test keys return a sandbox result.
+      description: Looks up a company by RC, BN or IT number. Set advance to false for a basic lookup. Test keys return a sandbox result.
       security:
         - bearerAuth: []
       requestBody:
@@ -1288,10 +1282,9 @@ paths:
                   type: CAC
                   status: VERIFIED
                   reference: 123***67
-                  provider: prembly
                   responseCode: '00'
                   detail: Verification successful
-                  feeKobo: '50000'
+                  feeKobo: '100000'
                   mode: TEST
                   sandbox: false
                   data:
@@ -1357,7 +1350,6 @@ paths:
                   type: BVN
                   status: VERIFIED
                   reference: 221*****89
-                  provider: prembly
                   responseCode: '00'
                   detail: Verification successful
                   feeKobo: '10000'

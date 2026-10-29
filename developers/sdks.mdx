@@ -63,6 +63,27 @@ session, err := client.CreateCheckoutSession(map[string]any{
 })
 ```
 
+## Verifications
+
+Verify BVN, NIN and CAC details from your server. The key needs the `KYC` scope, and each check is charged at the price returned by the pricing endpoint.
+
+```js
+const pricing = await vine.getVerificationPricing();
+const bvn = await vine.verifyBvn("22123456789");
+const nin = await vine.verifyNin("12345678901");
+const cac = await vine.verifyCac({ rcNumber: "1234567", companyType: "RC" });
+```
+
+```python
+pricing = vine.get_verification_pricing()
+bvn = vine.verify_bvn("22123456789")
+cac = vine.verify_cac("1234567", company_type="RC")
+```
+
+<Card title="Verifications API" href="/developers/verifications">
+  Request and response details for BVN, NIN and CAC.
+</Card>
+
 ## Webhooks
 
 Vine signs outbound webhooks with `X-Vine-Signature: t=<unix>,v1=<hex>`. The signature is an HMAC SHA256 of `<t>.<raw body>`. Verify it with the SDK helper before parsing the payload.

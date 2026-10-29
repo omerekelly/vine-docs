@@ -1,7 +1,7 @@
 ---
 title: "Verifications API"
 sidebarTitle: "Verifications API"
-description: "Verify BVN, NIN and CAC details with Prembly."
+description: "Verify BVN, NIN and CAC details."
 icon: "id-card"
 ---
 
@@ -46,14 +46,14 @@ curl https://api.vine.ng/v1/verifications/pricing \
       "type": "NIN",
       "label": "NIN verification",
       "productType": "kyc_nin",
-      "feeKobo": "10000",
+      "feeKobo": "15000",
       "active": true
     },
     {
       "type": "CAC",
       "label": "CAC company search",
       "productType": "kyc_cac",
-      "feeKobo": "50000",
+      "feeKobo": "100000",
       "active": true
     }
   ]
@@ -86,7 +86,6 @@ curl https://api.vine.ng/v1/verifications/bvn \
     "type": "BVN",
     "status": "VERIFIED",
     "reference": "221*****89",
-    "provider": "prembly",
     "responseCode": "00",
     "detail": "Verification successful",
     "feeKobo": "10000",
@@ -145,10 +144,9 @@ curl https://api.vine.ng/v1/verifications/cac \
     "type": "CAC",
     "status": "VERIFIED",
     "reference": "123***67",
-    "provider": "prembly",
     "responseCode": "00",
     "detail": "Verification successful",
-    "feeKobo": "50000",
+    "feeKobo": "100000",
     "mode": "TEST",
     "sandbox": false,
     "data": {
