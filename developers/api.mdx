@@ -48,6 +48,7 @@ Each key only unlocks the scopes selected when it was created.
 | `COURSES` | Courses and enrolments |
 | `BILLS` | Bill categories, validation and payments |
 | `SUBSCRIPTIONS` | Recurring plans and customer subscriptions |
+| `KYC` | BVN, NIN and CAC verification |
 | `PAYMENTS` | Legacy broad scope for all payment resources |
 
 Missing a scope returns `403 INSUFFICIENT_SCOPE`.
@@ -73,6 +74,10 @@ Missing a scope returns `403 INSUFFICIENT_SCOPE`.
 
   <Card title="Bills" icon="receipt" href="/developers/bills">
     Validate a customer reference and pay a bill.
+  </Card>
+
+  <Card title="Verifications" icon="id-card" href="/developers/verifications">
+    Check BVN, NIN and CAC details.
   </Card>
 
   <Card title="Webhooks" icon="bolt" href="/developers/webhooks">

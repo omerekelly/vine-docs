@@ -56,6 +56,7 @@
           "developers/checkout",
           "developers/invoices",
           "developers/bills",
+          "developers/verifications",
           "developers/webhooks",
           "developers/errors",
           "developers/subscriptions",

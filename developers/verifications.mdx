@@ -1,0 +1,186 @@
+---
+title: "Verifications API"
+sidebarTitle: "Verifications API"
+description: "Verify BVN, NIN and CAC details with Prembly."
+icon: "id-card"
+---
+
+Use the Verifications API to check identity and company details before onboarding a customer, approving a payout or opening an account.
+
+Each completed check creates a verification record, debits the price shown by the pricing endpoint from your deposit wallet, and returns the provider result.
+
+<Note>
+  Verification requires an API key with the `KYC` scope. Prices are set by Vine and can change. Read them from the pricing endpoint before a check.
+</Note>
+
+## Endpoints
+
+| Method | Path | Description |
+| --- | --- | --- |
+| `GET` | `/v1/verifications/pricing` | Current price for each check |
+| `POST` | `/v1/verifications/bvn` | Verify an 11 digit BVN |
+| `POST` | `/v1/verifications/nin` | Verify an 11 digit NIN |
+| `POST` | `/v1/verifications/cac` | Look up a company by RC, BN or IT number |
+| `GET` | `/v1/verifications/{id}` | Retrieve a stored verification |
+
+## Pricing
+
+```bash
+curl https://api.vine.ng/v1/verifications/pricing \
+  -H "Authorization: Bearer sk_test_your_key"
+```
+
+```json
+{
+  "mode": "TEST",
+  "currency": "NGN",
+  "pricing": [
+    {
+      "type": "BVN",
+      "label": "BVN verification",
+      "productType": "kyc_bvn",
+      "feeKobo": "10000",
+      "active": true
+    },
+    {
+      "type": "NIN",
+      "label": "NIN verification",
+      "productType": "kyc_nin",
+      "feeKobo": "10000",
+      "active": true
+    },
+    {
+      "type": "CAC",
+      "label": "CAC company search",
+      "productType": "kyc_cac",
+      "feeKobo": "50000",
+      "active": true
+    }
+  ]
+}
+```
+
+Prices are in kobo. The fee is debited from your deposit wallet in the same mode as the key. If the balance is below the fee, the request returns `402 INSUFFICIENT_DEPOSIT_BALANCE` and the provider is not called.
+
+A check whose price is inactive returns `503 VERIFICATION_UNAVAILABLE`.
+
+## Verify a BVN
+
+`POST /v1/verifications/bvn`
+
+| Field | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `number` | string | Yes | 11 digit BVN. |
+
+```bash
+curl https://api.vine.ng/v1/verifications/bvn \
+  -H "Authorization: Bearer sk_test_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{ "number": "22123456789" }'
+```
+
+```json
+{
+  "verification": {
+    "id": "kycver_9f2c1a",
+    "type": "BVN",
+    "status": "VERIFIED",
+    "reference": "221*****89",
+    "provider": "prembly",
+    "responseCode": "00",
+    "detail": "Verification successful",
+    "feeKobo": "10000",
+    "mode": "TEST",
+    "sandbox": false,
+    "data": {
+      "firstName": "Ada",
+      "lastName": "Okafor",
+      "dateOfBirth": "1994-01-01"
+    },
+    "createdAt": "2026-10-29T10:00:00.000Z"
+  }
+}
+```
+
+`status` is `VERIFIED`, `NOT_VERIFIED` or `FAILED`. A completed check is charged even when the identity does not match.
+
+## Verify a NIN
+
+Same body as BVN with an 11 digit NIN.
+
+```bash
+curl https://api.vine.ng/v1/verifications/nin \
+  -H "Authorization: Bearer sk_test_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{ "number": "12345678901" }'
+```
+
+## Verify a CAC company
+
+`POST /v1/verifications/cac`
+
+| Field | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `rcNumber` | string | Yes | RC, BN or IT number. A leading prefix is optional. |
+| `companyType` | string | No | `RC`, `BN` or `IT`. Inferred from the prefix when omitted. |
+| `companyName` | string | No | Helps the provider match the company. |
+| `advance` | boolean | No | Include directors and richer details. Defaults to `true`. |
+
+```bash
+curl https://api.vine.ng/v1/verifications/cac \
+  -H "Authorization: Bearer sk_test_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "rcNumber": "1234567",
+    "companyType": "RC",
+    "companyName": "Northwind Studio Limited",
+    "advance": true
+  }'
+```
+
+```json
+{
+  "verification": {
+    "id": "kycver_2c7f9a",
+    "type": "CAC",
+    "status": "VERIFIED",
+    "reference": "123***67",
+    "provider": "prembly",
+    "responseCode": "00",
+    "detail": "Verification successful",
+    "feeKobo": "50000",
+    "mode": "TEST",
+    "sandbox": false,
+    "data": {
+      "companyName": "NORTHWIND STUDIO LIMITED",
+      "rcNumber": "1234567",
+      "companyType": "RC",
+      "status": "ACTIVE",
+      "dateOfIncorporation": "2019-04-12",
+      "directors": [{ "name": "Ada Okafor", "position": "Director" }]
+    },
+    "createdAt": "2026-10-29T10:10:00.000Z"
+  }
+}
+```
+
+## Retrieve a verification
+
+`GET /v1/verifications/{id}` returns the stored record and result. Use it after a timeout so you do not pay for the same check twice.
+
+## Test mode
+
+Test keys return a sandbox result without calling the provider. The record has `sandbox: true`, and the fee is debited from your test deposit wallet so you can exercise the balance check.
+
+## Errors
+
+| Status | Code | Meaning |
+| --- | --- | --- |
+| `402` | `INSUFFICIENT_DEPOSIT_BALANCE` | Top up the deposit wallet and retry. |
+| `403` | `INSUFFICIENT_SCOPE` | The key is missing the `KYC` scope. |
+| `502` | `VERIFICATION_PROVIDER_UNAVAILABLE` | The provider did not respond. No fee is charged. |
+| `503` | `VERIFICATION_UNAVAILABLE` | The check is disabled or the provider is not configured. |
+
+## Scopes
+
+Verification requires the `KYC` scope.

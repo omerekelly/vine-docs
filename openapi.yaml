@@ -9,7 +9,7 @@ info:
     Send `Authorization: Bearer <api key>` where `<api key>` is a live or test key from **Dashboard → Developers**.
     Use `sk_live_…` for real money and `sk_test_…` while integrating.
 
-    API keys are scoped (`PAYMENT_LINKS`, `INVOICES`, `CHECKOUT`, `PRODUCTS`, `COURSES`, `BILLS`, `SIMS`) and mode-bound. `PAYMENTS` is the legacy broad payments scope. Only the endpoints in this reference are available to API keys.
+    API keys are scoped (`PAYMENT_LINKS`, `INVOICES`, `CHECKOUT`, `PRODUCTS`, `COURSES`, `BILLS`, `SIMS`, `KYC`) and mode-bound. `PAYMENTS` is the legacy broad payments scope. Only the endpoints in this reference are available to API keys.
 
     ## Amounts
     Monetary fields use **kobo** (100 kobo = ₦1). Example: ₦5,000 → `500000`.
@@ -27,6 +27,8 @@ tags:
     description: Create, send, and collect on invoices
   - name: Checkout
     description: Hosted checkout sessions
+  - name: Verifications
+    description: BVN, NIN and CAC identity checks
 components:
   securitySchemes:
     bearerAuth:
@@ -114,6 +116,7 @@ components:
         - BILLS
         - SIMS
         - CHECKOUT
+        - KYC
     Health:
       type: object
       properties:
@@ -541,6 +544,109 @@ components:
         - totalKobo
         - lineItems
         - payUrl
+    KycVerification:
+      type: object
+      properties:
+        id:
+          type: string
+          example: kycver_9f2c1a
+        type:
+          type: string
+          enum:
+            - BVN
+            - NIN
+            - CAC
+          example: BVN
+        status:
+          type: string
+          enum:
+            - VERIFIED
+            - NOT_VERIFIED
+            - FAILED
+          example: VERIFIED
+        reference:
+          type: string
+          description: Masked BVN, NIN or company number.
+          example: 221*****89
+        provider:
+          type: string
+          example: prembly
+        responseCode:
+          type: string
+          nullable: true
+          example: '00'
+        detail:
+          type: string
+          nullable: true
+          example: Verification successful
+        feeKobo:
+          type: string
+          description: Fee charged for this check, in kobo.
+          example: '10000'
+        mode:
+          $ref: '#/components/schemas/Mode'
+        sandbox:
+          type: boolean
+          example: false
+        data:
+          type: object
+          additionalProperties: true
+          nullable: true
+          description: Provider response for the check. Shape depends on the type.
+        createdAt:
+          type: string
+          format: date-time
+          example: '2026-10-29T10:00:00.000Z'
+      required:
+        - id
+        - type
+        - status
+        - reference
+        - provider
+        - feeKobo
+        - mode
+        - createdAt
+    VerificationPricing:
+      type: object
+      properties:
+        mode:
+          $ref: '#/components/schemas/Mode'
+        currency:
+          type: string
+          example: NGN
+        pricing:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+                enum:
+                  - BVN
+                  - NIN
+                  - CAC
+              label:
+                type: string
+                example: BVN verification
+              productType:
+                type: string
+                example: kyc_bvn
+              feeKobo:
+                type: string
+                example: '10000'
+              active:
+                type: boolean
+                example: true
+            required:
+              - type
+              - label
+              - productType
+              - feeKobo
+              - active
+      required:
+        - mode
+        - currency
+        - pricing
     CheckoutSession:
       type: object
       properties:
@@ -937,6 +1043,334 @@ paths:
                 code: BUNDLE_CODE_REQUIRED
         '403':
           $ref: '#/components/responses/Forbidden'
+  /v1/verifications/pricing:
+    get:
+      tags:
+        - Verifications
+      summary: Get verification prices
+      description: Prices charged per BVN, NIN or CAC check. Amounts are in kobo and match the key's mode.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Verification prices
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerificationPricing'
+              example:
+                mode: TEST
+                currency: NGN
+                pricing:
+                  - type: BVN
+                    label: BVN verification
+                    productType: kyc_bvn
+                    feeKobo: '10000'
+                    active: true
+                  - type: NIN
+                    label: NIN verification
+                    productType: kyc_nin
+                    feeKobo: '10000'
+                    active: true
+                  - type: CAC
+                    label: CAC company search
+                    productType: kyc_cac
+                    feeKobo: '50000'
+                    active: true
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /v1/verifications/bvn:
+    post:
+      tags:
+        - Verifications
+      summary: Verify BVN
+      description: Checks an 11 digit BVN with Prembly and debits the fee from your deposit wallet. Test keys return a sandbox result.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - number
+              properties:
+                number:
+                  type: string
+                  pattern: ^\d{11}$
+                  description: 11 digit BVN.
+                  example: '22123456789'
+            example:
+              number: '22123456789'
+      responses:
+        '201':
+          description: Verification result
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - verification
+                properties:
+                  verification:
+                    $ref: '#/components/schemas/KycVerification'
+              example:
+                verification:
+                  id: kycver_9f2c1a
+                  type: BVN
+                  status: VERIFIED
+                  reference: 221*****89
+                  provider: prembly
+                  responseCode: '00'
+                  detail: Verification successful
+                  feeKobo: '10000'
+                  mode: TEST
+                  sandbox: false
+                  data:
+                    firstName: Ada
+                    lastName: Okafor
+                    dateOfBirth: '1994-01-01'
+                  createdAt: '2026-10-29T10:00:00.000Z'
+        '402':
+          description: Insufficient deposit balance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: Insufficient deposit balance for this verification. Top up your wallet and try again.
+                code: INSUFFICIENT_DEPOSIT_BALANCE
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '502':
+          description: Verification provider unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: Verification provider is unavailable. Try again shortly.
+                code: VERIFICATION_PROVIDER_UNAVAILABLE
+  /v1/verifications/nin:
+    post:
+      tags:
+        - Verifications
+      summary: Verify NIN
+      description: Checks an 11 digit NIN with Prembly and debits the fee from your deposit wallet. Test keys return a sandbox result.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - number
+              properties:
+                number:
+                  type: string
+                  pattern: ^\d{11}$
+                  description: 11 digit NIN.
+                  example: '12345678901'
+            example:
+              number: '12345678901'
+      responses:
+        '201':
+          description: Verification result
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - verification
+                properties:
+                  verification:
+                    $ref: '#/components/schemas/KycVerification'
+              example:
+                verification:
+                  id: kycver_4b1c8d
+                  type: NIN
+                  status: VERIFIED
+                  reference: 123*****01
+                  provider: prembly
+                  responseCode: '00'
+                  detail: Verification successful
+                  feeKobo: '10000'
+                  mode: TEST
+                  sandbox: false
+                  data:
+                    firstName: Ada
+                    lastName: Okafor
+                    dateOfBirth: '1994-01-01'
+                  createdAt: '2026-10-29T10:05:00.000Z'
+        '402':
+          description: Insufficient deposit balance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: Insufficient deposit balance for this verification. Top up your wallet and try again.
+                code: INSUFFICIENT_DEPOSIT_BALANCE
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '502':
+          description: Verification provider unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: Verification provider is unavailable. Try again shortly.
+                code: VERIFICATION_PROVIDER_UNAVAILABLE
+  /v1/verifications/cac:
+    post:
+      tags:
+        - Verifications
+      summary: Verify CAC company
+      description: Looks up a company by RC, BN or IT number with Prembly. Set advance to false for a basic lookup. Test keys return a sandbox result.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - rcNumber
+              properties:
+                rcNumber:
+                  type: string
+                  description: RC, BN or IT number. A leading prefix is optional.
+                  example: '1234567'
+                companyType:
+                  type: string
+                  enum:
+                    - RC
+                    - BN
+                    - IT
+                  default: RC
+                  example: RC
+                companyName:
+                  type: string
+                  maxLength: 200
+                  example: Northwind Studio Limited
+                advance:
+                  type: boolean
+                  default: true
+                  description: Include directors and richer company details.
+                  example: true
+            example:
+              rcNumber: '1234567'
+              companyType: RC
+              companyName: Northwind Studio Limited
+              advance: true
+      responses:
+        '201':
+          description: Verification result
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - verification
+                properties:
+                  verification:
+                    $ref: '#/components/schemas/KycVerification'
+              example:
+                verification:
+                  id: kycver_2c7f9a
+                  type: CAC
+                  status: VERIFIED
+                  reference: 123***67
+                  provider: prembly
+                  responseCode: '00'
+                  detail: Verification successful
+                  feeKobo: '50000'
+                  mode: TEST
+                  sandbox: false
+                  data:
+                    companyName: NORTHWIND STUDIO LIMITED
+                    rcNumber: '1234567'
+                    companyType: RC
+                    status: ACTIVE
+                    dateOfIncorporation: '2019-04-12'
+                    directors:
+                      - name: Ada Okafor
+                        position: Director
+                  createdAt: '2026-10-29T10:10:00.000Z'
+        '402':
+          description: Insufficient deposit balance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: Insufficient deposit balance for this verification. Top up your wallet and try again.
+                code: INSUFFICIENT_DEPOSIT_BALANCE
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '502':
+          description: Verification provider unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: Verification provider is unavailable. Try again shortly.
+                code: VERIFICATION_PROVIDER_UNAVAILABLE
+  /v1/verifications/{id}:
+    get:
+      tags:
+        - Verifications
+      summary: Get a verification
+      description: Returns a stored verification, including its result and the fee charged.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Verification id.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Verification
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - verification
+                properties:
+                  verification:
+                    $ref: '#/components/schemas/KycVerification'
+              example:
+                verification:
+                  id: kycver_9f2c1a
+                  type: BVN
+                  status: VERIFIED
+                  reference: 221*****89
+                  provider: prembly
+                  responseCode: '00'
+                  detail: Verification successful
+                  feeKobo: '10000'
+                  mode: TEST
+                  sandbox: false
+                  data:
+                    firstName: Ada
+                    lastName: Okafor
+                  createdAt: '2026-10-29T10:00:00.000Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /v1/payment-links:
     get:
       tags:
