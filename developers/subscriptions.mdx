@@ -51,7 +51,7 @@ The response includes the plan and a `shareUrl`. Send customers to that link to 
 | - | - | - |
 | GET | `/v1/billing/plans` | List plans for the active workspace and mode |
 | POST | `/v1/billing/plans` | Create a plan |
-| PATCH | `/v1/billing/plans/:id` | Update name, amount, interval or active state |
+| PATCH | `/v1/billing/plans/:id` | Update name, amount, interval, trial length or active state |
 
 Supported intervals are `WEEKLY`, `MONTHLY`, `QUARTERLY`, `SEMIANNUAL` and `ANNUAL`.
 
@@ -65,7 +65,7 @@ Supported intervals are `WEEKLY`, `MONTHLY`, `QUARTERLY`, `SEMIANNUAL` and `ANNU
 
 ## Free trials
 
-Set `trialDays` on a plan to give customers free access before the first charge. The subscription becomes active immediately with `trialEndsAt` set, and the first charge is scheduled for the trial end.
+Set `trialDays` on a plan to give customers free access before the first charge. The subscription becomes active with `trialEndsAt` set, and the first charge is scheduled for the trial end.
 
 - **Bank direct debit** is the trial path for new customers. The customer authorises the mandate, no debit is taken, and the first debit runs automatically when the trial ends.
 - **Card trials** start without a charge only when the customer already has a tokenized card for your business. Otherwise the first period is charged at signup. New card customers can choose bank direct debit to start the trial instead.
