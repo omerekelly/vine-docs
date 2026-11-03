@@ -5,7 +5,7 @@ description: "Create recurring plans and charge your own customers automatically
 icon: "arrows-rotate"
 ---
 
-Recurring billing lets a business charge a customer automatically on a schedule. A plan defines the amount and interval. The customer accepts a recurring-payment mandate on a secure Vine page, pays the first period, and later renewals are charged to the saved card.
+Recurring billing lets a business charge a customer automatically on a schedule. A plan defines the amount, interval and optional free trial. The customer accepts a recurring-payment mandate on a secure Vine page, and later renewals are charged to the saved card or bank mandate.
 
 <Note>
   This API is for charging **your customers**. For the monthly plan that runs your Vine storefront, see [Store plans](/money/store-plans).
@@ -25,11 +25,12 @@ curl https://api.vine.ng/v1/billing/plans \
     "name": "Pro membership",
     "description": "Monthly access to the Pro community",
     "amountKobo": 500000,
-    "interval": "MONTHLY"
+    "interval": "MONTHLY",
+    "trialDays": 14
   }'
 ```
 
-The response includes the plan and a `shareUrl`. Send customers to that link to subscribe. Amounts are in the smallest unit: kobo for NGN, cents for USD. Add `"currency": "USD"` to create a USD subscription plan.
+The response includes the plan and a `shareUrl`. Send customers to that link to subscribe. Amounts are in the smallest unit: kobo for NGN, cents for USD. Add `"currency": "USD"` to create a USD subscription plan. Set `trialDays` to between 1 and 365 to offer a free trial, or `0` to disable it.
 
 ```json
 {
@@ -38,6 +39,7 @@ The response includes the plan and a `shareUrl`. Send customers to that link to 
     "name": "Pro membership",
     "amountKobo": "500000",
     "interval": "MONTHLY",
+    "trialDays": 14,
     "shareUrl": "https://vine.ng/subscribe/pln_..."
   }
 }
@@ -51,7 +53,7 @@ The response includes the plan and a `shareUrl`. Send customers to that link to 
 | POST | `/v1/billing/plans` | Create a plan |
 | PATCH | `/v1/billing/plans/:id` | Update name, amount, interval or active state |
 
-Supported intervals are `MONTHLY` and `ANNUAL`.
+Supported intervals are `WEEKLY`, `MONTHLY`, `QUARTERLY`, `SEMIANNUAL` and `ANNUAL`.
 
 ## Manage subscriptions
 
@@ -61,11 +63,20 @@ Supported intervals are `MONTHLY` and `ANNUAL`.
 | POST | `/v1/billing/subscriptions/:id/cancel` | Stop future renewals |
 | POST | `/v1/billing/subscriptions/:id/charge` | Retry a failed renewal |
 
+## Free trials
+
+Set `trialDays` on a plan to give customers free access before the first charge. The subscription becomes active immediately with `trialEndsAt` set, and the first charge is scheduled for the trial end.
+
+- **Bank direct debit** is the trial path for new customers. The customer authorises the mandate, no debit is taken, and the first debit runs automatically when the trial ends.
+- **Card trials** start without a charge only when the customer already has a tokenized card for your business. Otherwise the first period is charged at signup. New card customers can choose bank direct debit to start the trial instead.
+- The trial length is per plan. Editing `trialDays` affects new subscriptions, not existing trials.
+- The first charge after the trial is the normal plan amount. Renewals then continue on the plan interval.
+
 ## How the customer flow works
 
 1. You create a plan and share its `shareUrl`.
-2. The customer reviews the amount and interval, accepts the recurring mandate and pays the first period by card.
-3. Vine saves a tokenized card for the workspace. The mandate text, time and IP are stored with the subscription.
+2. The customer reviews the amount, interval and any trial, accepts the recurring mandate, and either starts the trial or pays the first period.
+3. Vine saves a tokenized card or bank mandate for the workspace. The mandate text, time and IP are stored with the subscription.
 4. Renewals are charged automatically. Failed charges retry after 1, 3 and 5 days; a subscription moves to past due after the final retry.
 5. Cancelling a subscription stops all future charges.
 
@@ -78,6 +89,7 @@ Subscribe to these events in **Dashboard → Webhooks**:
 | Event | When it fires |
 | - | - |
 | `subscription.created` | The first payment succeeds and the subscription becomes active |
+| `subscription.trial_started` | A free trial starts without an immediate charge |
 | `subscription.payment_succeeded` | A first or renewal payment succeeds |
 | `subscription.payment_failed` | A renewal attempt fails |
 | `subscription.cancelled` | The business cancels the subscription |

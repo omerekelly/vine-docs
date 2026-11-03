@@ -8,6 +8,19 @@
     "dark": "#D9F56F"
   },
   "favicon": "/images/vine-favicon.png",
+  "description": "Payments, payouts and storefronts for Nigerian businesses.",
+  "seo": {
+    "indexing": "navigable",
+    "metatags": {
+      "og:image": "https://docs.vine.ng/images/vine-og-1200x630.jpg",
+      "og:image:type": "image/jpeg",
+      "og:image:width": "1200",
+      "og:image:height": "630",
+      "og:image:alt": "Vine, payments without the workarounds",
+      "twitter:card": "summary_large_image",
+      "twitter:image": "https://docs.vine.ng/images/vine-og-1200x630.jpg"
+    }
+  },
   "navigation": {
     "pages": [
       {
