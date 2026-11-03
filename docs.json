@@ -106,6 +106,10 @@
         "label": "Website"
       },
       {
+        "href": "https://vine.ng/blog",
+        "label": "Blog"
+      },
+      {
         "label": "Support",
         "href": "mailto:support@vine.ng"
       }
