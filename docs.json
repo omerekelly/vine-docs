@@ -134,5 +134,10 @@
       "destination": "/money/store-plans",
       "permanent": true
     }
-  ]
+  ],
+  "footer": {
+    "socials": {
+      "x": "https://x.com/usevine_africa"
+    }
+  }
 }
