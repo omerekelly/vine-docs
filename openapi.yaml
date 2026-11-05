@@ -63,14 +63,6 @@ components:
       enum:
         - NGN
         - USD
-        - GHS
-        - KES
-        - XOF
-        - XAF
-        - UGX
-        - ZMW
-        - TZS
-        - RWF
       example: NGN
     AmountKobo:
       type: integer

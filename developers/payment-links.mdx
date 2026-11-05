@@ -24,9 +24,13 @@ Payment links are the fastest way to collect a fixed or custom amount.
 | Field | Type | Required | Notes |
 | --- | --- | --- | --- |
 | `title` | string | Yes | Shown on the payment page. Max 200 characters. |
-| `amountKobo` | integer | Conditional | Fixed amount in kobo. Required unless `allowCustomAmount` is true. |
+| `description` | string | No | Optional short description shown under the title. Max 500 characters. |
+| `currency` | string | No | `NGN` or `USD`. Defaults to `NGN`. |
+| `amountKobo` | integer | Conditional | Fixed amount in the smallest unit. Required unless `allowCustomAmount` is true. |
 | `allowCustomAmount` | boolean | No | Let the customer choose the amount. |
-| `paymentMethods` | string[] | No | `bank_transfer`, `card`, `crypto`. Defaults to the methods enabled on your account. |
+| `allowTipping` | boolean | No | Let the customer add a tip at payment time. |
+| `redirectUrl` | URL | No | Send the customer to this website after payment. Must be http or https. |
+| `paymentMethods` | string[] | No | `bank_transfer`, `card`, `crypto`. Bank transfer is NGN only. Defaults to the methods enabled on your account. |
 | `expiresAt` | ISO 8601 string | No | When the link should stop accepting payments. |
 
 ```bash
