@@ -5,14 +5,14 @@ description: "Choose a monthly or yearly plan for your Vine storefront."
 icon: "store"
 ---
 
-Vine store plans cover your storefront. There are two plans, and each can be billed monthly or yearly from your workspace deposit balance.
+Vine store plans cover your storefront. Store Basic is free on every account tier. Store Pro adds premium tools and can be billed monthly or yearly from your workspace deposit balance.
 
 | Plan | Monthly | Yearly | Best for |
 | --- | --- | --- | --- |
-| **Store Basic** | ₦1,500 | ₦15,000 | Opening a storefront and selling products, downloads or courses. |
+| **Store Basic** | Free | Free | Opening a storefront and selling products, downloads or courses. |
 | **Store Pro** | ₦3,500 | ₦35,000 | Stores that need premium themes, a custom domain and a free .com domain. |
 
-Yearly billing costs 10 months and covers 12. Every workspace has its own plan.
+Store Pro yearly billing costs 10 months and covers 12. Every workspace has its own plan.
 
 ## What is included
 
@@ -49,9 +49,9 @@ If you are on Store Pro monthly, the Domain page shows an upgrade prompt. Switch
 1. In the dashboard, open **Store plans**.
 2. Choose monthly or yearly billing.
 2. Pick Store Basic or Store Pro.
-3. Confirm the charge. The fee is taken from your deposit balance.
+3. Confirm the plan. Store Basic activates immediately. Store Pro is charged from your deposit balance.
 
-A plan change starts a new period immediately: 30 days for monthly, one year for yearly. Top up your deposit balance first if it is below the plan price.
+A plan change starts a new period immediately: 30 days for monthly, one year for yearly. Top up your deposit balance before choosing Store Pro if it is below the plan price.
 
 Plans are prepaid and do not renew automatically. Renew from **Store plans** before the period ends.
 
@@ -73,8 +73,8 @@ curl https://api.vine.ng/v1/plans
     {
       "slug": "starter",
       "name": "Store Basic",
-      "priceMonthlyKobo": 150000,
-      "priceYearlyKobo": 1500000,
+      "priceMonthlyKobo": 0,
+      "priceYearlyKobo": 0,
       "premiumThemes": false,
       "customDomain": false,
       "freeDomain": false
@@ -92,7 +92,7 @@ curl https://api.vine.ng/v1/plans
 }
 ```
 
-Amounts are in kobo. `150000` is ₦1,500.
+Amounts are in kobo. `0` means free. Store Pro is `350000` kobo, or ₦3,500.
 
 The `freeDomain` flag marks the plan that can include a free domain. The benefit applies only when the subscription interval is `ANNUAL`.
 
