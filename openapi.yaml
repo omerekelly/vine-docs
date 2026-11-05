@@ -256,14 +256,28 @@ components:
         title:
           type: string
           example: Design retainer
+        description:
+          type: string
+          nullable: true
+          description: Optional short description shown on the payment page.
+          example: Logo and brand guidelines
         amountKobo:
           type: string
           nullable: true
-          description: Fixed amount in kobo, or null when the payer chooses the amount.
+          description: Fixed amount in the smallest unit, or null when the payer chooses the amount.
           example: '2500000'
         allowCustomAmount:
           type: boolean
           example: false
+        allowTipping:
+          type: boolean
+          example: false
+        redirectUrl:
+          type: string
+          format: uri
+          nullable: true
+          description: Website opened after a successful payment.
+          example: null
         currency:
           $ref: '#/components/schemas/Currency'
         paymentMethods:
@@ -312,6 +326,8 @@ components:
           type: string
           example: clx8p2v0k0000qz7h9m1s2abc
         amountKobo:
+          $ref: '#/components/schemas/AmountKoboResponse'
+        tipKobo:
           $ref: '#/components/schemas/AmountKoboResponse'
         payerEmail:
           type: string
@@ -1424,13 +1440,28 @@ paths:
                   maxLength: 200
                   description: Shown on the payment page.
                   example: Design retainer
+                description:
+                  type: string
+                  maxLength: 500
+                  description: Optional short description shown under the title.
+                  example: Logo and brand guidelines
+                currency:
+                  $ref: '#/components/schemas/Currency'
                 amountKobo:
                   allOf:
                     - $ref: '#/components/schemas/AmountKobo'
-                  description: Fixed amount in kobo. Required unless `allowCustomAmount` is true.
+                  description: Fixed amount in the smallest unit. Required unless `allowCustomAmount` is true.
                 allowCustomAmount:
                   type: boolean
                   example: false
+                allowTipping:
+                  type: boolean
+                  example: false
+                redirectUrl:
+                  type: string
+                  format: uri
+                  description: Website to open after a successful payment.
+                  example: https://example.com/thank-you
                 paymentMethods:
                   type: array
                   items:
@@ -1765,6 +1796,8 @@ paths:
                   format: email
                   maxLength: 255
                   example: ada@example.com
+                currency:
+                  $ref: '#/components/schemas/Currency'
                 clientPhone:
                   type: string
                   example: '+2348012345678'
