@@ -45,7 +45,7 @@
         "group": "Storefront",
         "icon": "store",
         "pages": [
-          "storefront/overview"
+          "store/overview"
         ]
       },
       {
@@ -136,6 +136,11 @@
     {
       "source": "/money/sims-and-plans",
       "destination": "/money/store-plans",
+      "permanent": true
+    },
+    {
+      "source": "/storefront/overview",
+      "destination": "/store/overview",
       "permanent": true
     }
   ],
