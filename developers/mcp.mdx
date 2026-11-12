@@ -5,7 +5,7 @@ description: "Use Vine from Claude, Cursor and other MCP clients."
 icon: "plug"
 ---
 
-Vine exposes a Model Context Protocol (MCP) server so AI agents and developer tools can create payment links, checkout sessions and invoices.
+Vine exposes a Model Context Protocol (MCP) server so AI agents and developer tools can manage payments and the storefront. The same endpoint covers payment links, checkout, invoices, products, orders, customers, coupons and collections.
 
 ## Endpoint
 
@@ -13,11 +13,7 @@ Vine exposes a Model Context Protocol (MCP) server so AI agents and developer to
 https://api.vine.ng/mcp
 ```
 
-For test mode through the sandbox host:
-
-```text
-https://sandbox.vine.ng/mcp
-```
+The endpoint uses the MCP Streamable HTTP transport. Test and live data are selected by the API key, not by a separate host. Use an `sk_test_...` key while testing and an `sk_live_...` key for real payments.
 
 ## Authentication
 
@@ -26,6 +22,18 @@ Use a Vine API key as a bearer token:
 ```http
 Authorization: Bearer sk_test_your_key
 ```
+
+Create keys in the Vine console at **Developers → API keys**. Select the capabilities the client needs:
+
+| Capability | Scope | Use it for |
+| --- | --- | --- |
+| Store | `PRODUCTS` | Storefront settings, products, orders, customers, coupons, collections and shipping |
+| Checkout | `CHECKOUT` | Checkout sessions, plus store order tools |
+| Payment links | `PAYMENT_LINKS` | Payment links |
+| Invoices | `INVOICES` | Invoices |
+| Payments | `PAYMENTS` | Payment tools and refunds |
+
+Store tools require an account tier that includes the storefront.
 
 <Warning>
   API keys are secrets. Configure them in your MCP client's local settings and never commit them to a repository.
@@ -49,9 +57,61 @@ Most MCP clients accept a remote HTTP server entry like this:
 }
 ```
 
+Clients that do not support remote HTTP servers can use `mcp-remote` as a bridge:
+
+```json
+{
+  "mcpServers": {
+    "vine": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "https://api.vine.ng/mcp",
+        "--header",
+        "Authorization: Bearer sk_test_your_key"
+      ]
+    }
+  }
+}
+```
+
 Restart the client after changing the configuration.
 
-## Tools
+## Store tools
+
+| Tool | What it does |
+| --- | --- |
+| `get_store` | Read storefront settings, URLs, themes and plan entitlements. |
+| `create_store` | Create the storefront. |
+| `update_store` | Update the name, tagline, about text, theme, accent colour, visibility and payment methods. |
+| `check_store_slug` | Check whether a store subdomain is available. |
+| `set_store_domain` | Set or clear a custom domain. |
+| `verify_store_domain` | Verify the custom domain DNS. |
+| `list_products` | List catalog products, variants, prices and stock. |
+| `get_product` | Read one catalog product. |
+| `create_product` | Create a catalog product with variants. |
+| `update_product` | Update a product and its variants. |
+| `deactivate_product` | Hide a product from the storefront. |
+| `list_orders` | List recent paid and pending orders. |
+| `get_order` | Read one order with items and shipping details. |
+| `update_order_fulfillment` | Update fulfillment status, tracking number or merchant note. |
+| `refund_order` | Refund a paid order in full and restore stock. |
+| `list_store_customers` | List customers, order counts and lifetime value. |
+| `list_coupons` | List store coupons. |
+| `create_coupon` | Create an amount or percent coupon. |
+| `deactivate_coupon` | Stop a coupon from being used. |
+| `list_collections` | List product collections. |
+| `create_collection` | Create a collection with optional products. |
+| `update_collection` | Update a collection. |
+| `delete_collection` | Delete a collection without deleting its products. |
+| `list_low_stock` | List variants at or below their low-stock threshold. |
+| `list_shipping_rates` | List shipping rates by country. |
+| `upsert_shipping_rate` | Create or update a country shipping rate. |
+
+Store amounts are in kobo. For `create_coupon`, `discountValue` is in naira for `AMOUNT` coupons and a percentage from 1 to 100 for `PERCENT` coupons.
+
+## Payment tools
 
 | Tool | Scope | What it does |
 | --- | --- | --- |
@@ -73,9 +133,20 @@ Once the server is connected, you can ask your client:
 - “Create a checkout for ₦5,000 and send me the link.”
 - “List my unpaid invoices.”
 - “Send invoice INV-0042 to the client.”
+- “List my store products and flag anything that is low on stock.”
+- “Add a new product called Canvas Tote with two variants, natural and black, at ₦12,000 each.”
+- “Show me orders that have been paid but not shipped, then mark them as shipped.”
+- “Create a 10 percent coupon called LAUNCH10 that expires at the end of the month.”
+- “Create a collection called New arrivals and add my three newest products.”
 
-Amounts passed to the tools are in kobo: `2500000` means ₦25,000.
+Amounts passed to the payment tools are in kobo: `2500000` means ₦25,000.
 
 ## Scopes and modes
 
-The MCP server uses the same API key scopes and live/test separation as the REST API. A key without the required scope returns a tool error. Use `sk_test_...` while testing and `sk_live_...` for real payments.
+The MCP server uses the same API key scopes and live/test separation as the REST API. A key without the required scope returns a tool error.
+
+- A payments-only key cannot read or change the store.
+- A key with the Store capability can manage the storefront, products, orders, customers, coupons and collections.
+- A key with Checkout can also use the order tools.
+- Refunds move real money and restore stock. Confirm the order before calling `refund_order`.
+- Fulfillment updates only accept valid status transitions.
